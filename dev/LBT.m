@@ -1,0 +1,50 @@
+%%% Born term superoperator
+
+function result = LBT( input, rho )
+
+    %% assert that rho is a struct. otherwise there are no memory functions
+    if ~isa(rho, 'struct')
+        exception = MException('LBT:InputInvalid', ...
+            'input density matrix must be a struct');
+        throw(exception)
+    end
+    
+    %% extract the interactions and other data from the input
+    M = input.M;
+    dt = input.dt;
+    interactions = input.interactions;
+    
+    %% calculate the Born term commutator
+    LBT = zeros(M, M);
+    
+    %% cycle through each of the terms in the interaction Hamiltonian
+    for k = 1:numel(interactions)
+        for l = 1:numel(interactions)
+
+            %% get the relevant system operators
+            J2 = interactions{k}{1} * interactions{l}{1};
+            Al = interactions{l}{2};
+            Bl = interactions{l}{3};
+        
+            rhs = zeros(M, M);
+            %% perform rhs integration
+            for tprime = 1:numel(rho.hist)
+            
+                %% calculate the slice with the contracted d and s term
+                slice = rho.hist{tprime}.c{k} * trace(Bl * rho.hist{tprime}.dkern{k}) ...
+                            - rho.hist{tprime}.r{k} * trace(Bl * rho.hist{tprime}.skern{k});
+            
+                %% add the slice the integral
+                rhs = rhs + dt * slice;
+            end
+        
+            %% and evaluate the commutator for this set of interactions
+            LBT = LBT - J2 * (Al * rhs - rhs * Al);
+        
+        end
+    end
+    
+    result = LBT;
+
+end
+
