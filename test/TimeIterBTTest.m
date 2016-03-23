@@ -63,9 +63,7 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) T
             % do the iteration
             tc.input.dt = 0.01;
             tc.input.Nt = 600;
-tic
             result = TimeIter(tc.input, tc.rho);
-toc
             
             % test against the analytic solution by Flesch et al.
             % http://dx.doi.org/10.1103/PhysRevA.78.033608
@@ -78,7 +76,7 @@ toc
             for i = 1:tc.input.Nt
                 occ(i, 1) = abs(trace(n1 * result.hist{i}.rho));
                 occ(i, 2) = exactocc(i * tc.input.dt);
-%                tc.assertEqual(occ(i, 1), occ(i, 2), 'AbsTol', tc.iterTol);
+                tc.assertEqual(occ(i, 1), occ(i, 2), 'AbsTol', tc.iterTol);
             end
             
         end
