@@ -43,9 +43,13 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) T
             U = 0.0;
             
             % create a set of inputs
-            clustersize = 2;
-            J = 0.5;
+            clustersize = 4;
+            J = 1.0;
             Delta = 0.0;
+            
+            % check that the cluster size is even, which it must be for the
+            % input state to have the form |010101...>
+            tc.assertEqual(mod(clustersize, 2), 0);
             
             % reset the system
             varargin = {'clustersize', clustersize, ...
@@ -57,12 +61,18 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) T
                         'gamma', gamma};
             tc.input = SetupSystem(tc.input, varargin);
             tc.input = SetupEnvironment(tc.input, {});
-            tc.rho = kron([0.0, 0.0; 0.0, 1.0], ...
+            twosite_rho = kron([0.0, 0.0; 0.0, 1.0], ...
                           [1.0, 0.0; 0.0, 0.0]);
+            % tensor product the two site density matrix to create the
+            % system density matrix
+            tc.rho = twosite_rho;
+            for i = 1:(clustersize / 2) - 1
+                tc.rho = kron(tc.rho, twosite_rho);
+            end
             
             % do the iteration
-            tc.input.dt = 0.01;
-            tc.input.Nt = 600;
+            tc.input.dt = 0.001;
+            tc.input.Nt = 2000;
             result = TimeIter(tc.input, tc.rho);
             
             % test against the analytic solution by Flesch et al.

@@ -20,7 +20,11 @@ function result = LBT( input, rho )
     %% cycle through each of the terms in the interaction Hamiltonian
     for k = 1:numel(interactions)
         for l = 1:numel(interactions)
-
+            
+            if ~(((k == 1 || k == 2) && (l == 1 || l == 2)) || ((k == 3 || k == 4) && (l == 3 || l == 4)))
+                continue
+            end
+            
             %% get the relevant system operators
             J2 = interactions{k}{1} * interactions{l}{1};
             Al = interactions{l}{2};
