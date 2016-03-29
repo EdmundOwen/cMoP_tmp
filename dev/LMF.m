@@ -1,13 +1,16 @@
 %%% Mean field superoperator
 
-function result = LMF( input, rho )
+function result = LMF( input, mat, solution )
 
     %% if the input rho is a struct, extract the density matrix
-    if isa(rho, 'struct')
-        rho = rho.rho;
+    %% if the input matrix is a struct, throw an error
+    if isa(mat, 'struct')
+        exception = MException('L0:InputInvalid', ...
+            'the matrix input must not be a struct');
+        throw(exception)
     end
     
-    result = zeros(size(rho));
+    result = zeros(size(mat));
 
     %% extract the interactions from the input
     SE_interactions = input.interactions;
@@ -21,7 +24,7 @@ function result = LMF( input, rho )
         B = SE_interactions{i}{3};        
         
         %% calculate the mean field term for this interaction
-        result = result + -1.0i * interaction_strength * comm(B, A, rho);
+        result = result + -1.0i * interaction_strength * comm(B, A, mat);
     
     end
     
@@ -30,10 +33,10 @@ end  % of function: LMF
 
 %%% A sub-function to calculate the mean-field commutator, that is:
 %%%
-%%% Tr{B * rho} [A, rho]
-function result = comm(B, A, rho)
+%%% Tr{B * mat} [A, mat]
+function result = comm(B, A, mat)
 
-mean_field = trace(B * rho);
-result = mean_field * (A * rho - rho * A);
+mean_field = trace(B * mat);
+result = mean_field * (A * mat - mat * A);
 
 end  % of function: comm

@@ -1,11 +1,11 @@
 %%% Born term superoperator
 
-function result = LBT( input, rho )
+function result = LBT( input, mat, solution )
 
     %% assert that rho is a struct. otherwise there are no memory functions
-    if ~isa(rho, 'struct')
+    if ~isa(solution, 'struct')
         exception = MException('LBT:InputInvalid', ...
-            'input density matrix must be a struct');
+            'input solution must be a struct');
         throw(exception)
     end
     
@@ -32,11 +32,11 @@ function result = LBT( input, rho )
         
             rhs = zeros(M, M);
             %% perform rhs integration
-            for tprime = 1:numel(rho.hist)
+            for tprime = 1:numel(solution.hist)
             
                 %% calculate the slice with the contracted d and s term
-                slice = rho.hist{tprime}.c{k} * trace(Bl * rho.hist{tprime}.dkern{k}) ...
-                            - rho.hist{tprime}.r{k} * trace(Bl * rho.hist{tprime}.skern{k});
+                slice = solution.hist{tprime}.c{k} * trace(Bl * solution.hist{tprime}.dkern{k}) ...
+                            - solution.hist{tprime}.r{k} * trace(Bl * solution.hist{tprime}.skern{k});
             
                 %% add the slice the integral
                 rhs = rhs + dt * slice;

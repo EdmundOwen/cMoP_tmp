@@ -12,7 +12,6 @@ function result = TimeIter(input, rho)
     
     %% Get the list of linear operators on the rhs of the Louiville equation
     L = input.L;
-    dt = input.dt;
 
     %% perform density matrix iteration
     for i = 1:input.Nt
@@ -26,14 +25,8 @@ function result = TimeIter(input, rho)
             result = IterateMemory(result, input);
         end
         
-        rhs = zeros(size(result.rho));
-        % calculate rhs of Louiville equaion
-        for j = 1:numel(L)
-            rhs = rhs + L{j}( input, result );
-        end
-        
         % iterate the density matrix
-        result.rho = result.rho + dt * rhs;
+        result.rho = PerformTimeStep(result.rho, result, L, input);
         
     end
     

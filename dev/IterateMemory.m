@@ -3,17 +3,17 @@
 
 function result = IterateMemory( result, input )
 
-    dt = input.dt;
+    % the memory evolution is free
+    L = { @L0 };
 
     % iterate for each previous time step
     for j = 1:numel(result.hist)
         for k = 1:numel(input.interactions)
-            result.hist{j}.c{k} = result.hist{j}.c{k} + dt * L0( input, result.hist{j}.c{k} );
-            result.hist{j}.dkern{k} = result.hist{j}.dkern{k} + dt * L0( input, result.hist{j}.dkern{k} );
-            result.hist{j}.r{k} = result.hist{j}.r{k} + dt * L0( input, result.hist{j}.r{k} );
-            result.hist{j}.skern{k} = result.hist{j}.skern{k} + dt * L0( input, result.hist{j}.skern{k} );
+            result.hist{j}.c{k} = PerformTimeStep(result.hist{j}.c{k}, result, L, input);
+            result.hist{j}.dkern{k} = PerformTimeStep(result.hist{j}.dkern{k}, result, L, input);
+            result.hist{j}.r{k} = PerformTimeStep(result.hist{j}.r{k}, result, L, input);
+            result.hist{j}.skern{k} = PerformTimeStep(result.hist{j}.skern{k}, result, L, input);
         end
     end
-
 end
 

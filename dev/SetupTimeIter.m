@@ -8,10 +8,12 @@ function input = SetupTimeIter(input, varargin)
     defaultdt = 0.001;
     defaultNt = 1000;
     defaultOperators = { @L0 };
+    defaultMethod = 'euler';
     
     addOptional(p, 'dt', defaultdt, @isnumeric);
     addOptional(p, 'Nt', defaultNt, @isinteger);
     addOptional(p, 'operators', defaultOperators);
+    addOptional(p, 'method', defaultMethod);
     
     %% parse the inputs
     tmp = varargin{:};
@@ -21,6 +23,7 @@ function input = SetupTimeIter(input, varargin)
     input.dt = p.Results.dt;
     input.Nt = p.Results.Nt;
     input.L = p.Results.operators;
+    input.method = p.Results.method;
 
     %% check whether memory functions are needed
     input.memoryNeeded = false;
