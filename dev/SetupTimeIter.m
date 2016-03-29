@@ -8,7 +8,7 @@ function input = SetupTimeIter(input, varargin)
     defaultdt = 0.001;
     defaultNt = 1000;
     defaultOperators = { @L0 };
-    defaultMethod = 'euler';
+    defaultMethod = 'crank-nicolson';
     
     addOptional(p, 'dt', defaultdt, @isnumeric);
     addOptional(p, 'Nt', defaultNt, @isinteger);
@@ -27,10 +27,10 @@ function input = SetupTimeIter(input, varargin)
 
     %% check whether memory functions are needed
     input.memoryNeeded = false;
-    termsNeedingMemory = { @LBT };
+    input.termsNeedingMemory = { @LBT };
     for i = 1:numel(input.L)
-        for j = 1:numel(termsNeedingMemory)
-            if isequal(input.L{i}, termsNeedingMemory{j})
+        for j = 1:numel(input.termsNeedingMemory)
+            if isequal(input.L{i}, input.termsNeedingMemory{j})
                 input.memoryNeeded = true;
             end
         end

@@ -13,6 +13,9 @@ function mat = PerformTimeStep(mat, solution, L, input )
         case 'euler'
             mat = euler(mat, solution, L, input);
             
+        case 'crank-nicolson'
+            mat = cranknicolson(mat, solution, L, input);
+            
         case 'runge-kutta'
             mat = rungekutta(mat, solution, L, input);
             
@@ -42,11 +45,51 @@ end
 %%% a crank-nicolson scheme
 function mat = cranknicolson(mat, solution, L, input)
 
-    %% not implemented exception
-    exception = MException('PerformTimeStep:NotImplementedException', ...
-        strcat('Not implemented!'));
-    throw(exception)
-        
+    % ensure that M is correct
+    input.M = input.onsitedim^input.clustersize;
+
+    % create superoperator matrices by putting matrices with one one into 
+    % the superoperator method
+    function Lmat = makeLmatrix( L )
+        Lmat = zeros(input.M^2);
+        for k = 1:input.M^2
+            tmprho = zeros(input.M^2, 1);
+            tmprho(k) = 1.0;
+            tmprho = reshape(tmprho, [input.M input.M]);
+            
+            Lmat(:, k) = reshape( L(input, tmprho, solution), [input.M^2 1] );
+        end
+    end
+
+    %% check if solution contains constant superoperator matrices and save
+    if ~isfield(solution, 'Lmat')
+        solution.Lmat = cell([numel(L) 1]);
+    end
+    for i = 1:numel(L)
+        for j = 1:numel(input.termsNeedingMemory)
+            if isempty(solution.Lmat{i}) && ~isequal(L{i}, input.termsNeedingMemory{j}) || ...
+                                                        isequal(input.termsNeedingMemory{j}, L{i})
+                % if the matrix doesn't exist and it doesn't need memory or if the 
+                % term uses memory, save a version of it to solution
+                solution.Lmat{i} = makeLmatrix( L{i} );
+            end
+        end
+    end
+    
+    %% create the right- and left-hand side matrices of the crank nicolson method
+    rhs = eye(input.M^2);
+    lhs = eye(input.M^2);
+    for i = 1:numel(L)
+        rhs = rhs + 0.5 * input.dt * solution.Lmat{i};
+        lhs = lhs - 0.5 * input.dt * solution.Lmat{i};
+    end
+    
+    %% solve and reshape
+    b = rhs * reshape(mat, [input.M^2 1]);
+    a = lhs \ b;
+    
+    mat = reshape(a, [input.M input.M]);
+    
 end
 
 %%% a simple euler iteration scheme
