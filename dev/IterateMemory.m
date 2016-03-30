@@ -1,7 +1,7 @@
 %%% A function to iterate the memory functions using a simple Euler
 %%% iteration scheme
 
-function result = IterateMemory( result, input )
+function result = IterateMemory( result, input, dt )
 
     % the memory evolution is free
     L = { @L0 };
@@ -9,10 +9,10 @@ function result = IterateMemory( result, input )
     % iterate for each previous time step
     for j = 1:numel(result.hist)
         for k = 1:numel(input.interactions)
-            result.hist{j}.c{k} = PerformTimeStep(result.hist{j}.c{k}, result, L, input);
-            result.hist{j}.dkern{k} = PerformTimeStep(result.hist{j}.dkern{k}, result, L, input);
-            result.hist{j}.r{k} = PerformTimeStep(result.hist{j}.r{k}, result, L, input);
-            result.hist{j}.skern{k} = PerformTimeStep(result.hist{j}.skern{k}, result, L, input);
+            result.hist{j}.c{k} = PerformTimeStep(result.hist{j}.c{k}, result, L, input, dt);
+            result.hist{j}.dkern{k} = PerformTimeStep(result.hist{j}.dkern{k}, result, L, input, dt);
+            result.hist{j}.r{k} = PerformTimeStep(result.hist{j}.r{k}, result, L, input, dt);
+            result.hist{j}.skern{k} = PerformTimeStep(result.hist{j}.skern{k}, result, L, input, dt);
         end
     end
 end

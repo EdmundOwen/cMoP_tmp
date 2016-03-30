@@ -4,32 +4,31 @@
 % mat           - the matrix to iterate
 % solution      - the solution struct containing all memory functions, etc.
 %
-function mat = PerformTimeStep(mat, solution, L, input )
+function mat = PerformTimeStep(mat, solution, L, input, dt )
 
     method = input.method;
     
     %% switch between the various possible time-step methods
     switch method
         case 'euler'
-            mat = euler(mat, solution, L, input);
+            mat = euler(mat, solution, L, input, dt);
             
         case 'crank-nicolson'
-            mat = cranknicolson(mat, solution, L, input);
+            mat = cranknicolson(mat, solution, L, input, dt);
             
         case 'runge-kutta'
-            mat = rungekutta(mat, solution, L, input);
+            mat = rungekutta(mat, solution, L, input, dt);
             
         otherwise
             exception = MException('PerformTimeStep:InvalidTimeStepMethod', ...
                 strcat('the method ', method, ' is not supported'));
             throw(exception)
-            
     end
 
 end
 
 %%% a simple euler iteration scheme
-function mat = euler(mat, solution, L, input)
+function mat = euler(mat, solution, L, input, dt)
     
     rhs = zeros(size(mat));
     % calculate rhs of Louiville equaion
@@ -38,12 +37,12 @@ function mat = euler(mat, solution, L, input)
     end
         
     % iterate the density matrix
-    mat = mat + input.dt * rhs;
+    mat = mat + dt * rhs;
     
 end
 
 %%% a crank-nicolson scheme
-function mat = cranknicolson(mat, solution, L, input)
+function mat = cranknicolson(mat, solution, L, input, dt)
 
     % ensure that M is correct
     input.M = input.onsitedim^input.clustersize;
@@ -80,8 +79,8 @@ function mat = cranknicolson(mat, solution, L, input)
     rhs = eye(input.M^2);
     lhs = eye(input.M^2);
     for i = 1:numel(L)
-        rhs = rhs + 0.5 * input.dt * solution.Lmat{i};
-        lhs = lhs - 0.5 * input.dt * solution.Lmat{i};
+        rhs = rhs + 0.5 * dt * solution.Lmat{i};
+        lhs = lhs - 0.5 * dt * solution.Lmat{i};
     end
     
     %% solve and reshape
@@ -93,7 +92,7 @@ function mat = cranknicolson(mat, solution, L, input)
 end
 
 %%% a simple euler iteration scheme
-function mat = rungakutta(mat, solution, L, input)
+function mat = rungakutta(mat, solution, L, input, dt)
     
     k0 = zeros(size(mat));
     k1 = zeros(size(mat));
@@ -106,6 +105,6 @@ function mat = rungakutta(mat, solution, L, input)
     throw(exception)
         
     % iterate the density matrix
-    mat = mat + (input.dt / 6.0) * (k0 + 2.0 * k1 + 2.0 * k2 + k3);
+    mat = mat + (dt / 6.0) * (k0 + 2.0 * k1 + 2.0 * k2 + k3);
     
 end
