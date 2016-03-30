@@ -13,10 +13,11 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) T
     properties (MethodSetupParameter)
         setup_varargin = {{'clustersize', 1, 'onsitedim', 2}};
         environ_varargin = {{}};
-        timeiter_varargin = {{'operators', {@L0, @LMF} }};
+        timeiter_varargin = {{'operators', { @L0, @LMF }, 'method', 'euler' },...
+                             {'operators', { @L0, @LMF }, 'method', 'crank-nicolson'}};
     end
 
-    methods (TestMethodSetup, ParameterCombination='sequential')
+    methods (TestMethodSetup)
         
         function MethodSetup(tc, setup_varargin, environ_varargin, timeiter_varargin)
             tc.input.exists = true;

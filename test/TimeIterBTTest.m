@@ -13,10 +13,11 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) T
     properties (MethodSetupParameter)
         setup_varargin = {{'clustersize', 1, 'onsitedim', 2}};
         environ_varargin = {{}};
-        timeiter_varargin = {{'operators', {@L0, @LMF, @LBT} }};
+        timeiter_varargin = {{'operators', { @L0, @LMF, @LBT }, 'method', 'euler' },...
+                             {'operators', { @L0, @LMF, @LBT }, 'method', 'crank-nicolson'}};
     end
 
-    methods (TestMethodSetup, ParameterCombination='sequential')
+    methods (TestMethodSetup)
         
         function MethodSetup(tc, setup_varargin, environ_varargin, timeiter_varargin)
             tc.input.exists = true;
@@ -72,7 +73,7 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) T
             
             % do the iteration
             tc.input.dt = 0.001;
-            tc.input.Nt = 2000;
+            tc.input.Nt = 10;
             result = TimeIter(tc.input, tc.rho);
             
             % test against the analytic solution by Flesch et al.
@@ -86,9 +87,9 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) T
             for i = 1:tc.input.Nt
                 occ(i, 1) = abs(trace(n1 * result.hist{i}.rho));
                 occ(i, 2) = exactocc(i * tc.input.dt);
-                tc.assertEqual(occ(i, 1), occ(i, 2), 'AbsTol', tc.iterTol);
             end
             
+            tc.assertEqual(occ(i, 1), occ(i, 2), 'AbsTol', tc.iterTol);
         end
         
     end
