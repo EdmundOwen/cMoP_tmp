@@ -20,13 +20,10 @@ function result = TimeIter(input, rho)
         if input.memoryNeeded
             % save results from the old time step 
             result = SaveMemory(result, input, i);
-            
-            % iterate the memory functions to the new time
-            result = IterateMemory(result, input, dt);
         end
         
-        % iterate the density matrix
-        result.rho = PerformTimeStep(result.rho, result, L, input, dt);
+        % iterate the density matrix and memory functions
+        result = PerformTimeStep(result, L, input, dt);
         
     end
     

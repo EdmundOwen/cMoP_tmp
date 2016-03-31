@@ -51,4 +51,7 @@ function input = SetupSystem(input, varargin)
     %% create load flag to show whether input contains loaded data
     input.flagLoadedData = false;
     
+    %% initialise flag, the system is not a memory function so this is always false
+    input.isMemory = false;
+    
 end

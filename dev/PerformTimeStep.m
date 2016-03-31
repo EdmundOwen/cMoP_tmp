@@ -4,41 +4,31 @@
 % mat           - the matrix to iterate
 % solution      - the solution struct containing all memory functions, etc.
 %
-function mat = PerformTimeStep(mat, solution, L, input, dt )
+function solution = PerformTimeStep( solution, L, input, dt )
 
     method = input.method;
+    rho = solution.rho;
     
     %% switch between the various possible time-step methods
     switch method
         case 'euler'
-            mat = euler(mat, solution, L, input, dt);
+            [new_rho, solution] = Euler( rho, solution, L, input, dt);
             
         case 'crank-nicolson'
-            mat = cranknicolson(mat, solution, L, input, dt);
+            [new_rho, solution] = cranknicolson( rho, solution, L, input, dt);
             
         case 'runge-kutta'
-            mat = rungekutta(mat, solution, L, input, dt);
+            [new_rho, solution] = rungekutta( rho, solution, L, input, dt);
             
         otherwise
             exception = MException('PerformTimeStep:InvalidTimeStepMethod', ...
                 strcat('the method ', method, ' is not supported'));
             throw(exception)
     end
-
-end
-
-%%% a simple euler iteration scheme
-function mat = euler(mat, solution, L, input, dt)
     
-    rhs = zeros(size(mat));
-    % calculate rhs of Louiville equaion
-    for j = 1:numel(L)
-        rhs = rhs + L{j}( input, mat, solution );
-    end
-        
-    % iterate the density matrix
-    mat = mat + dt * rhs;
-    
+    %% set the solution density matrix to its new value
+    solution.rho = new_rho;
+
 end
 
 %%% a crank-nicolson scheme

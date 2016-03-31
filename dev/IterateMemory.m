@@ -3,6 +3,10 @@
 
 function result = IterateMemory( result, input, dt )
 
+    % create flag to tell the iteration process that this is a memory
+    % matrix
+    input.isMemory = true;
+
     % the memory evolution is free
     L = { @L0 };
 
@@ -15,5 +19,9 @@ function result = IterateMemory( result, input, dt )
             result.hist{j}.skern{k} = PerformTimeStep(result.hist{j}.skern{k}, result, L, input, dt);
         end
     end
+    
+    % reset the memory flag
+    input.isMemory = false;
+    
 end
 
