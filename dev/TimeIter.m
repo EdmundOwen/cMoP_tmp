@@ -23,7 +23,8 @@ function result = TimeIter(input, rho)
         end
         
         % iterate the density matrix and memory functions
-        result = PerformTimeStep(result, L, input, dt);
+        [new_rho, result] = PerformTimeStep(result.rho, result, L, input, dt);
+        result.rho = new_rho;
         
     end
     
