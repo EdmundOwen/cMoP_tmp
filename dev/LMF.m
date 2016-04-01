@@ -24,7 +24,7 @@ function result = LMF( input, mat, solution )
         B = SE_interactions{i}{3};        
         
         %% calculate the mean field term for this interaction
-        result = result + -1.0i * interaction_strength * comm(B, A, mat);
+        result = result + -1.0i * interaction_strength * comm(B, A, mat, solution.rho);
     
     end
     
@@ -33,10 +33,10 @@ end  % of function: LMF
 
 %%% A sub-function to calculate the mean-field commutator, that is:
 %%%
-%%% Tr{B * mat} [A, mat]
-function result = comm(B, A, mat)
+%%% Tr{B * rho} [A, mat]
+function result = comm(B, A, mat, rho)
 
-mean_field = trace(B * mat);
+mean_field = trace(B * rho);
 result = mean_field * (A * mat - mat * A);
 
 end  % of function: comm

@@ -13,8 +13,7 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) T
     properties (MethodSetupParameter)
         setup_varargin = {{'clustersize', 1, 'onsitedim', 2}};
         environ_varargin = {{}};
-        timeiter_varargin = {{'operators', { @L0, @LMF }, 'method', 'euler' },...
-                             {'operators', { @L0, @LMF }, 'method', 'crank-nicolson'}};
+        timeiter_varargin = {{'operators', { @L0, @LMF }, 'method', 'euler' }};
     end
 
     methods (TestMethodSetup)
@@ -35,6 +34,10 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) T
             % tests the mean-field, steady state solutions of the driven
             % dissipative Bose-Hubbard model using the results from Boite
             % et al. http://dx.doi.org/10.1103/PhysRevLett.110.233601
+            
+            % mean-field does not work for Crank-Nicolson so test for an
+            % error in the test
+            tc.assertNotEqual(tc.input.method, 'crank-nicolson');
             
             % create a set of inputs... note that this should correspond to
             % a unique solution part of the parameter space (see Fig. 1 of)
@@ -70,7 +73,7 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) T
             for i = 1:clustersize
                 a_site = kron(speye(onsitedim^(i - 1)), ...
                             kron(a_loc, speye(onsitedim^(clustersize-i))));
-                        
+
                 % calculate the mean-field bosonic coherence
                 a_mf = trace(a_site * result.rho);
                 % and input it into the theoretical equation... it should

@@ -4,6 +4,7 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) L
     
     properties
         rho
+        solution
         input
         absTol = 1e-7;
     end
@@ -20,6 +21,7 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) L
             tc.input = SetupSystem(tc.input, setup_varargin);
             tc.input = SetupEnvironment(tc.input, environ_varargin);
             tc.rho = InitializeRho(tc.input);
+            tc.solution.rho = tc.rho;
         end
         
     end
@@ -29,7 +31,7 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) L
         %% for L0
         % Check that the operator maintains the size of the density matrix
         function TestL0Size(tc)
-            tc.assertEqual(size(L0(tc.input, tc.rho)), ...
+            tc.assertEqual(size(L0(tc.input, tc.rho, tc.solution)), ...
                            size(tc.rho));
         end
         % Check that the operator result is Hermitian by operating on the set of 
@@ -40,8 +42,9 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) L
             for i = 1:tc.input.M
                 rho_unit = zeros(tc.input.M);
                 rho_unit(i, i) = 1.0;
+                tc.solution.rho = rho_unit;
                 
-                result = L0(tc.input, rho_unit);
+                result = L0(tc.input, rho_unit, tc.solution);
                 hermDiff = result' - result;
                 tc.assertLessThan(max(abs(hermDiff(:))), tc.absTol);
             end
@@ -50,7 +53,7 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) L
         %% for LMF
         % Check that the operator maintains the size of the density matrix
         function TestLMFSize(tc)
-            tc.assertEqual(size(LMF(tc.input, tc.rho)), ...
+            tc.assertEqual(size(LMF(tc.input, tc.rho, tc.solution)), ...
                            size(tc.rho));
         end
         % Check that the operator result is Hermitian by operating on the set of 
@@ -61,8 +64,9 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) L
             for i = 1:tc.input.M
                 rho_unit = zeros(tc.input.M);
                 rho_unit(i, i) = 1.0;
+                tc.solution.rho = rho_unit;
                 
-                result = LMF(tc.input, rho_unit);
+                result = LMF(tc.input, rho_unit, tc.solution);
                 hermDiff = result' - result;
                 tc.assertLessThan(max(abs(hermDiff(:))), tc.absTol);
             end
