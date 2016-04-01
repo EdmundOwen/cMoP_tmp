@@ -5,7 +5,6 @@ function result = SaveMemory( result, input, i )
     % save the density matrix (for post-simulation analysis rather than
     % calculations)
     rho = result.rho;
-    result.hist{i}.rho = rho;
 
     for k = 1:numel(input.interactions)
         % calculate the fluctuations
