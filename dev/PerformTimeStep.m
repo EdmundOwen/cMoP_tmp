@@ -19,6 +19,9 @@ function [new_mat, solution] = PerformTimeStep( mat, solution, L, input, dt )
         case 'runge-kutta'
             [new_mat, solution] = RungeKutta( mat, solution, L, input, dt);
             
+        case 'heun'
+            [new_mat, solution] = Heun( mat, solution, L, input, dt);
+            
         otherwise
             exception = MException('PerformTimeStep:InvalidTimeStepMethod', ...
                 strcat('the method ', method, ' is not supported'));

@@ -14,7 +14,8 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) T
         setup_varargin = {{'clustersize', 1, 'onsitedim', 2}};
         environ_varargin = {{}};
         timeiter_varargin = {{'operators', { @L0, @LMF, @LBT }, 'method', 'euler' },...
-                             {'operators', { @L0, @LMF, @LBT }, 'method', 'runge-kutta'}};
+                             {'operators', { @L0, @LMF, @LBT }, 'method', 'runge-kutta'},...
+                             {'operators', { @L0, @LMF, @LBT }, 'method', 'heun'}};
     end
 
     methods (TestMethodSetup)
@@ -73,7 +74,7 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) T
             
             % do the iteration
             tc.input.dt = 0.005;
-            tc.input.Nt = 300;
+            tc.input.Nt = 30;
             result = TimeIter(tc.input, tc.rho);
             
             % test against the analytic solution by Flesch et al.

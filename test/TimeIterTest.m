@@ -13,7 +13,8 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) T
         setup_varargin = {{'clustersize', 1, 'onsitedim', 2}};
         timeiter_varargin = {{'operators', { @L0 }, 'method', 'euler' },...
                              {'operators', { @L0 }, 'method', 'crank-nicolson'},...
-                             {'operators', { @L0 }, 'method', 'runge-kutta'}};
+                             {'operators', { @L0 }, 'method', 'runge-kutta'},...
+                             {'operators', { @L0 }, 'method', 'heun'}};
     end
 
     methods (TestMethodSetup)
