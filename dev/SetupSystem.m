@@ -54,6 +54,20 @@ function input = SetupSystem(input, varargin)
     %% create load flag to show whether input contains loaded data
     input.flagLoadedData = false;
     
+    %% create a list of the linear operators
+    input.isLinear = { @L0 };
+    
+    %% check whether memory functions are needed
+    input.memoryNeeded = false;
+    input.termsNeedingMemory = { @LBT };
+    for i = 1:numel(input.L)
+        for j = 1:numel(input.termsNeedingMemory)
+            if isequal(input.L{i}, input.termsNeedingMemory{j})
+                input.memoryNeeded = true;
+            end
+        end
+    end
+    
     %% initialise flag, the system is not a memory function so this is always false
     input.isMemory = false;
     

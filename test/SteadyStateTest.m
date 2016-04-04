@@ -6,6 +6,7 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
     properties
         input
         rho
+        solution
         absTol = 1e-7;
     end
     
@@ -22,6 +23,10 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
             tc.input = SetupSystem(tc.input, setup_varargin);
             tc.input = SetupEnvironment(tc.input, environ_varargin);
             tc.rho = InitializeRho(tc.input);
+            
+            % setup solution struct
+            tc.solution = {};
+            tc.solution.rho = tc.rho;
         end
         
     end
@@ -30,18 +35,16 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
         
         function TestSuperoperatorCreation(tc)
             %%% create a free evolution superoperator matrix and test it
-            solution = {};
-            solution.rho = tc.rho;
             M = tc.input.M;
             
             for i = 1:numel(tc.input.L)
-                mat = CreateSuperoperatorMatrix( tc.input.L{i}, tc.input, solution );
+                mat = CreateSuperoperatorMatrix( tc.input.L{i}, tc.input, tc.solution );
             
                 % check that the matrices have the same size
                 tc.assertEqual(size(mat), [M^2 M^2]);
                 % and check that they do the right thing to rho
                 tc.assertEqual(mat * reshape(tc.rho, [M^2 1]), ...
-                                reshape(tc.input.L{i}(tc.input, tc.rho, solution), [M^2 1]));
+                                reshape(tc.input.L{i}(tc.input, tc.rho, tc.solution), [M^2 1]));
             end
         end
         
@@ -51,19 +54,17 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
             %%% superoperators
             
             % setup
-            solution = {};
-            solution.rho = tc.rho;
             M = tc.input.M;
             
             for i = 1:numel(tc.input.L)
                 % create a superoperator matrix and diagonalize
-                Lmat = CreateSuperoperatorMatrix( tc.input.L{i}, tc.input, solution );
+                Lmat = CreateSuperoperatorMatrix( tc.input.L{i}, tc.input, tc.solution );
                 [U, D] = eig(Lmat);
                 
                 for j = 1:size(U, 1)
                     % input the jth eigenvector into the operator L
                     eigmat = reshape(U(:, j), [M M]);
-                    result = tc.input.L{i}(tc.input, eigmat, solution);
+                    result = tc.input.L{i}(tc.input, eigmat, tc.solution);
                     result = reshape(result, [M^2 1]);
                     
                     % this should be equal to the eigenvector multiplied by
@@ -73,8 +74,8 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
             end
             
         end
-        
-    end
     
+    end
+
 end
 
