@@ -55,7 +55,7 @@ function input = SetupSystem(input, varargin)
     input.flagLoadedData = false;
     
     %% create a list of the linear operators
-    input.isLinear = { @L0 };
+    input.isLinear = @L0;
     
     %% check whether memory functions are needed
     input.memoryNeeded = false;

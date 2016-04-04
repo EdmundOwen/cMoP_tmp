@@ -11,17 +11,19 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
     end
     
     properties (MethodSetupParameter)
-        setup_varargin = {{'clustersize', 2, 'onsitedim', 4, 'operators', { @L0 } }, ...
+        setup_varargin = {{'clustersize', 4, 'onsitedim', 2, 'operators', { @L0 } }, ...
                           {'clustersize', 1, 'onsitedim', 2, 'operators', { @L0, @LMF } }};
         environ_varargin = {{}};
+        steady_varargin = {{}};
     end
 
     methods (TestMethodSetup)
         
-        function MethodSetup(tc, setup_varargin, environ_varargin)
+        function MethodSetup(tc, setup_varargin, environ_varargin, steady_varargin)
             tc.input.exists = true;
             tc.input = SetupSystem(tc.input, setup_varargin);
             tc.input = SetupEnvironment(tc.input, environ_varargin);
+            tc.input = SetupSteadyState(tc.input, steady_varargin);
             tc.rho = InitializeRho(tc.input);
             
             % setup solution struct
@@ -74,8 +76,60 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
             end
             
         end
-    
+        
+        function TestDampedQubit(tc)
+            %%% tests the steady state density matrix for the damped qubit
+            %%% as in TimeIterTest
+            
+            % test for setups containing only linear terms
+            if ~isequal(tc.input.L, { @L0 })
+                return
+            end
+            
+            % it's a qubit...
+            tc.input.onsitedim = 2;
+            
+            % set most of the inputs to zero
+            tc.input.Delta = 0.0;
+            tc.input.U = 0.0;
+            tc.input.J = 0.0;
+            
+            % drive the qubits
+            if tc.input.Omega == 0.0
+                tc.input.Omega = 1.0;
+            end
+            
+            % set the Lindblad weights
+            if tc.input.gamma == 0.0
+                tc.input.gamma = 1.0;
+            end
+            tc.input.Lindblad_weights = tc.input.gamma * eye(numel(tc.input.A_Lindblad));
+            
+            % setup the new Hamiltonian
+            tc.input.H0 = SetupH0(tc.input);
+            
+            % the expected final density matrix (from steady-state Lindblad
+            % equation)
+            expected = 1;
+            rho00 = (tc.input.gamma^2 + tc.input.Omega^2) / (tc.input.gamma^2 + 2.0 * tc.input.Omega^2);
+            rho11 = 1.0 - rho00;
+            rho01 = -1.0i * tc.input.Omega / tc.input.gamma * (1.0 - 2.0 * rho00);
+            rho10 = -1.0 * rho01;
+            
+            mixed = [rho00, rho01; rho10, rho11];
+            for i = 1:tc.input.clustersize
+                expected = kron(expected, mixed);
+            end
+            
+            % calculate the steady state solution
+            result = CalculateSteadyState(tc.input, tc.rho, tc.solution);
+            
+            % test to make sure that the steady state solution is correct
+            tc.assertEqual(expected, result, 'AbsTol', tc.absTol);
+            
+        end
+        
     end
-
+    
 end
 
