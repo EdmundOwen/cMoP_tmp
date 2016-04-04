@@ -47,18 +47,9 @@ function solution = updateLmatrices( L, solution, input )
         for j = 1:numel(input.termsNeedingMemory)
             if isempty(solution.Lmat{i}) && ~isequal(L{i}, input.termsNeedingMemory{j}) || ...
                                                         isequal(input.termsNeedingMemory{j}, L{i})
-                %% create superoperator matrices by putting matrices with a single
-                % one into the superoperator method
-                Lmat_tmp = zeros(input.M^2);
-                for k = 1:input.M^2
-                    tmprho = zeros(input.M^2, 1);
-                    tmprho(k) = 1.0;
-                    tmprho = reshape(tmprho, [input.M input.M]);
-            
-                    Lmat_tmp(:, k) = reshape( L{i}(input, tmprho, solution), [input.M^2 1] );
-                end
                 
-                solution.Lmat{i} = Lmat_tmp;
+                solution.Lmat{i} = CreateSuperoperatorMatrix(L{i}, input, solution);
+                
             end
         end
     end
