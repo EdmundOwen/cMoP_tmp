@@ -6,14 +6,15 @@ function input = SetupSystem(input, varargin)
 
     %% define default input values
     p = inputParser;
-    defaultClusterSize = 1;
-    defaultOnsiteDim = 2;
-    defaultDelta = 1.0;
-    defaultJ = 1.0;
-    defaultU = 0.0;
-    defaultOmega = 0.0;
-    defaultgamma = 0.0;
-    defaultdim = 1;
+    defaultClusterSize = GetFromInput(input, 'clustersize', 1);
+    defaultOnsiteDim = GetFromInput(input, 'onsitedim', 2);
+    defaultDelta = GetFromInput(input, 'Delta', 1.0);
+    defaultJ = GetFromInput(input, 'J', 1.0);
+    defaultU = GetFromInput(input, 'U', 0.0);
+    defaultOmega = GetFromInput(input, 'Omega', 0.0);
+    defaultgamma = GetFromInput(input, 'gamma', 0.0);
+    defaultOperators = GetFromInput(input, 'L', { @L0 });
+    defaultdim = GetFromInput(input, 'dim', 1);
     
     addOptional(p, 'clustersize', defaultClusterSize, @isnumeric);
     addOptional(p, 'onsitedim', defaultOnsiteDim, @isnumeric);
@@ -22,6 +23,7 @@ function input = SetupSystem(input, varargin)
     addOptional(p, 'U', defaultU, @isnumeric);
     addOptional(p, 'Omega', defaultOmega, @isnumeric);
     addOptional(p, 'gamma', defaultgamma, @isnumeric);
+    addOptional(p, 'operators', defaultOperators);
     addOptional(p, 'dim', defaultdim, @isnumeric);
     
     %% parse the inputs
@@ -35,6 +37,7 @@ function input = SetupSystem(input, varargin)
     input.Omega = p.Results.Omega;
     input.gamma = p.Results.gamma;
     input.dim = p.Results.dim;
+    input.L = p.Results.operators;
    
     %% calculate the system Hilbert space dimension
     input.onsitedim = p.Results.onsitedim;
