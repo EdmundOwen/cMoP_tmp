@@ -10,7 +10,8 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
     end
     
     properties (MethodSetupParameter)
-        setup_varargin = {{'clustersize', 1, 'onsitedim', 2, 'operators', { @L0, @LMF } }};
+        setup_varargin = {{'clustersize', 2, 'onsitedim', 4, 'operators', { @L0 } }, ...
+                          {'clustersize', 1, 'onsitedim', 2, 'operators', { @L0, @LMF } }};
         environ_varargin = {{}};
     end
 
@@ -28,7 +29,7 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
     methods (Test)
         
         function TestSuperoperatorCreation(tc)
-            % create a free evolution superoperator matrix
+            %%% create a free evolution superoperator matrix and test it
             solution = {};
             solution.rho = tc.rho;
             M = tc.input.M;
@@ -42,6 +43,35 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
                 tc.assertEqual(mat * reshape(tc.rho, [M^2 1]), ...
                                 reshape(tc.input.L{i}(tc.input, tc.rho, solution), [M^2 1]));
             end
+        end
+        
+        function TestSuperoperatorDiagonalization(tc)
+            %%% tests the diagonalization of a superoperator matrix by
+            %%% inputing the corresponding eigenvectors back into the
+            %%% superoperators
+            
+            % setup
+            solution = {};
+            solution.rho = tc.rho;
+            M = tc.input.M;
+            
+            for i = 1:numel(tc.input.L)
+                % create a superoperator matrix and diagonalize
+                Lmat = CreateSuperoperatorMatrix( tc.input.L{i}, tc.input, solution );
+                [U, D] = eig(Lmat);
+                
+                for j = 1:size(U, 1)
+                    % input the jth eigenvector into the operator L
+                    eigmat = reshape(U(:, j), [M M]);
+                    result = tc.input.L{i}(tc.input, eigmat, solution);
+                    result = reshape(result, [M^2 1]);
+                    
+                    % this should be equal to the eigenvector multiplied by
+                    % the eigenvalue, ie. L * U = D * U
+                    tc.assertEqual(result, D(j, j) * U(:, j), 'AbsTol', tc.absTol);
+                end
+            end
+            
         end
         
     end
