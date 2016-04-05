@@ -28,6 +28,18 @@ function rho_ss = CalculateSteadyState( input, init_rho, solution )
         throw(exception)
     end
         
+    %% create the free evolution superoperator matrix and calculate its
+    % eigenvalues and eigenvectors
+    if ~isfield(solution, 'Uinv')
+        Lmat0 = CreateSuperoperatorMatrix(@L0, input, solution);
+        [U, D] = eig(Lmat0);
+        Uinv = eye(M^2) / U;
+        
+        solution.U = U;
+        solution.Uinv = Uinv;
+        solution.D = sparse(D);
+    end
+    
     %% perform the steady state calculation iteration
     for i = 1:input.Niter
 

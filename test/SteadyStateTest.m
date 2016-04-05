@@ -11,8 +11,9 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
     end
     
     properties (MethodSetupParameter)
-        setup_varargin = {{'gamma', 1.0, 'Omega', 1.0, 'clustersize', 4, 'onsitedim', 2, 'operators', { @L0 } }, ...
-                          {'clustersize', 1, 'onsitedim', 2, 'operators', { @L0, @LMF } }};
+        setup_varargin = {{'gamma', 1.0, 'Omega', 1.0, 'clustersize', 1, 'onsitedim', 2, 'operators', { @L0 } }, ...
+                          {'clustersize', 1, 'onsitedim', 2, 'operators', { @L0, @LMF } }, ...
+                          {'Delta', 0.6, 'J', 1.0, 'gamma', 1.0, 'Omega', 1.5, 'clustersize', 2, 'onsitedim', 2, 'operators', { @L0, @LMF, @LBTSS }}};
         environ_varargin = {{}};
         steady_varargin = {{}};
     end
@@ -46,7 +47,7 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
                 tc.assertEqual(size(mat), [M^2 M^2]);
                 % and check that they do the right thing to rho
                 tc.assertEqual(mat * reshape(tc.rho, [M^2 1]), ...
-                                reshape(tc.input.L{i}(tc.input, tc.rho, tc.solution), [M^2 1]));
+                                reshape(tc.input.L{i}(tc.input, tc.rho, tc.solution), [M^2 1]), 'AbsTol', tc.absTol);
             end
         end
         
@@ -132,8 +133,14 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
         function TestDefaults(tc)
             %%% a function to test the default settings to get a steady 
             %%% density matrix, no matter what they are.  this uses the 
-            %%% time iteration schemes where the relaxation time is assumed
-            %%% to be twenty times the maximum energy difference
+            %%% time iteration schemes where the relaxation time taken from
+            %%% the damping parameter
+            
+            % if using the steady state Born term superoperator, don't
+            % bother
+            if isequal(tc.input.L, { @L0, @LMF, @LBTSS })
+                return
+            end
             
             % check whether there is a steady state and don't perform this
             % test if there isn't
@@ -141,12 +148,9 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
                 return
             end
             
-            % calculate the spectrum of the isolated system
-            energies = eig(tc.input.H0);
-            
             % setup the default iterator
             tc.input = SetupTimeIter(tc.input, {'method', 'heun'});
-            tc.input.Nt = 20 * round(abs(energies(1) - energies(end))) / tc.input.dt;
+            tc.input.Nt = round(20.0 / (tc.input.gamma * tc.input.dt));
             
             % iterate the wavefunction
             result_t = TimeIter(tc.input, tc.rho);
@@ -230,6 +234,31 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
                 % expectation value
                 tc.assertEqual(trace(a_site' * a_site * tc.solution.rho), a_occ, 'AbsTol', 10.0 * tc.input.SSError);
             end
+            
+        end
+        
+        function TestSteadyStateBornTerm(tc)
+            % tests the steady state solutions of the driven dissipative 
+            % spin chain using the initial cMoP paper as a guide...
+            % how, I don't know yet...................!
+            
+            % check that the input superoperators contains the Born terms
+            % and that it's a spin chain
+            if ~isequal(tc.input.L, { @L0, @LMF, @LBTSS }) || tc.input.onsitedim ~= 2
+                return
+            end
+            
+            % make sure that there is a steady state solution
+            tc.assertTrue(CheckForSteadyState(CreateSuperoperatorMatrix(@L0, tc.input, tc.solution)));
+            
+            result = CalculateSteadyState(tc.input, tc.rho, tc.solution);
+            
+            a_loc = annihilation(tc.input.onsitedim);
+            a_loc = kron(a_loc, eye(2));
+            n = a_loc' * a_loc;
+            n = trace(n * result);
+            
+            tc.assertEqual(n, 0.0);
             
         end
         
