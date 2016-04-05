@@ -8,7 +8,7 @@ function input = SetupSteadyState(input, varargin)
     defaultNiter = GetFromInput(input, 'Niter', 100);
     defaultSSError = GetFromInput(input, 'SSError', 1e-5);
     
-    addOptional(p, 'Niter', defaultNiter, @isinteger);
+    addOptional(p, 'Niter', defaultNiter, @isnumeric);
     addOptional(p, 'SSError', defaultSSError, @isnumeric);
     
     %% parse the inputs
@@ -16,7 +16,7 @@ function input = SetupSteadyState(input, varargin)
     parse(p, tmp{:});
     
     %% recover iteration parameters
-    input.Niter = p.Results.Niter;
+    input.Niter = round(p.Results.Niter);
     input.SSError = p.Results.SSError;
     
 end
