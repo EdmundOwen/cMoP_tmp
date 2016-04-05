@@ -3,6 +3,10 @@
 
 function rho_ss = CalculateSteadyState( input, init_rho, solution )
 
+    %% machine tolerance error for calculating the zeros of the svd 
+    % decomposition
+    machine_tol = 1e-10;
+
     %% get useful input values
     L = input.L;
     M = input.M;
@@ -15,6 +19,14 @@ function rho_ss = CalculateSteadyState( input, init_rho, solution )
         end
     end
     
+    %% check whether a steady state solution exists, if not, throw an error
+    [steadystateexists, errortype] = CheckForSteadyState(Lmat0);
+    if ~steadystateexists
+        exception = MException('CalculateSteadyState:InputInvalid', ...
+            strcat('the system described produces a non-relaxing dynamical map: ', errortype));
+        throw(exception)
+    end
+        
     %% perform the steady state calculation iteration
     for i = 1:input.Niter
 
@@ -26,10 +38,15 @@ function rho_ss = CalculateSteadyState( input, init_rho, solution )
             end
         end
         
-        %% solve using these matrices to get a new density matrix
-        new_rho = null(Liter);
+        %% calculate the SVD of Liter
+        [U, S, V] = svd(Liter);
+        
+        %% the singular value is the solution to Liter * new_rho = 0
+        k = find(diag(S) < machine_tol, 1);
+        new_rho = V(:, k);
+        
+        %% reshape and normalise
         new_rho = reshape(new_rho, [M M]);
-        % normalise the trace
         new_rho = new_rho / trace(new_rho);
         
         %% check whether the solution has converged

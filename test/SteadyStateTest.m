@@ -11,7 +11,7 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
     end
     
     properties (MethodSetupParameter)
-        setup_varargin = {{'clustersize', 4, 'onsitedim', 2, 'operators', { @L0 } }, ...
+        setup_varargin = {{'gamma', 1.0, 'Omega', 1.0, 'clustersize', 4, 'onsitedim', 2, 'operators', { @L0 } }, ...
                           {'clustersize', 1, 'onsitedim', 2, 'operators', { @L0, @LMF } }};
         environ_varargin = {{}};
         steady_varargin = {{}};
@@ -126,6 +126,37 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
             
             % test to make sure that the steady state solution is correct
             tc.assertEqual(expected, result, 'AbsTol', tc.absTol);
+            
+        end
+        
+        function TestDefaults(tc)
+            %%% a function to test the default settings to get a steady 
+            %%% density matrix, no matter what they are.  this uses the 
+            %%% time iteration schemes where the relaxation time is assumed
+            %%% to be twenty times the maximum energy difference
+            
+            % check whether there is a steady state and don't perform this
+            % test if there isn't
+            if ~CheckForSteadyState(CreateSuperoperatorMatrix(@L0, tc.input, tc.solution));
+                return
+            end
+            
+            % calculate the spectrum of the isolated system
+            energies = eig(tc.input.H0);
+            
+            % setup the default iterator
+            tc.input = SetupTimeIter(tc.input, {'method', 'heun'});
+            tc.input.Nt = 20 * round(abs(energies(1) - energies(end))) / tc.input.dt;
+            
+            % iterate the wavefunction
+            result_t = TimeIter(tc.input, tc.rho);
+            
+            % calculate the steady state
+            result_ss = CalculateSteadyState(tc.input, tc.rho, tc.solution);
+            
+            % compare the two results
+            tc.assertEqual(result_ss, result_t.rho, 'AbsTol', tc.absTol);
+            
             
         end
         
