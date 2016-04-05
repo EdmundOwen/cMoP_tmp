@@ -6,6 +6,7 @@ function rho_ss = CalculateSteadyState( input, init_rho, solution )
     %% machine tolerance error for calculating the zeros of the svd 
     % decomposition
     machine_tol = 1e-10;
+    converged = false;
 
     %% get useful input values
     L = input.L;
@@ -52,12 +53,20 @@ function rho_ss = CalculateSteadyState( input, init_rho, solution )
         %% check whether the solution has converged
         error = max(max(abs(new_rho - solution.rho)));
         if error < input.SSError
+            converged = true;
             break;
         end
         
         %% set the solution density matrix to be this new one
         solution.rho = new_rho;
         
+    end
+    
+    %% check to make sure the solution is converged
+    if ~converged
+        exception = MException('CalculateSteadyState:NotConverged', ...
+            'convergence not acheived');
+        throw(exception)
     end
     
 	%% return the calculated value    
