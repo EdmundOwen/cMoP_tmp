@@ -10,7 +10,7 @@ function result = SaveMemory( result, input, i )
         % calculate the fluctuations
         Ak = input.interactions{k}{2}; Bk = input.interactions{k}{3};
         dAk = Ak - trace(Ak * rho) * speye(size(Ak));
-        dBk = Bk - trace(Bk * result.rho) * speye(size(Bk));
+        dBk = Bk - trace(Bk * rho) * speye(size(Bk));
         
         % save the memory functions from this time step
         result.hist{i}.c{k} = dAk * rho;
