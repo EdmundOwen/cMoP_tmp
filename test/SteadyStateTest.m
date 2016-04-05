@@ -155,8 +155,81 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
             result_ss = CalculateSteadyState(tc.input, tc.rho, tc.solution);
             
             % compare the two results
-            tc.assertEqual(result_ss, result_t.rho, 'AbsTol', tc.absTol);
+            tc.assertEqual(result_ss, result_t.rho, 'AbsTol', tc.input.SSError);
             
+        end
+        
+        function TestBoseHubbardMeanField(tc)
+            % tests the mean-field, steady state solutions of the driven
+            % dissipative Bose-Hubbard model using the results from Boite
+            % et al. http://dx.doi.org/10.1103/PhysRevLett.110.233601
+            
+            % only do this test if the test case is in the mean field
+            % approximation
+            if ~isequal(tc.input.L, { @L0, @LMF })
+                return
+            end
+            
+            % create a set of inputs... note that this should correspond to
+            % a unique solution part of the parameter space (see Fig. 1 of)
+            % reference
+            clustersize = 1;
+            onsitedim = 3;     % caution: this needs to be greater than 2 to pass
+            J = 0.5;
+            Delta = 1.5;
+            U = 10.0;
+            Omega = 0.4;
+            gamma = 0.3;
+            
+            % reset the system
+            varargin = {'clustersize', clustersize, ...
+                        'onsitedim', onsitedim, ...
+                        'J', J, ...
+                        'Delta', Delta, ...
+                        'U', U, ...
+                        'Omega', Omega, ...
+                        'gamma', gamma};
+            tc.input = SetupSystem(tc.input, varargin);
+            tc.input = SetupEnvironment(tc.input, {});
+            tc.rho = InitializeRho(tc.input);
+            
+            % calculate the steady state solution directly using cMoP
+            tc.solution.rho = CalculateSteadyState(tc.input, tc.rho, tc.solution);
+            
+            % check that the values for the mean-field bosonic coherence s
+            % and occupations are consistent with the theoretical values
+            % for each site
+            a_loc = annihilation(onsitedim);
+            for i = 1:clustersize
+                a_site = kron(speye(onsitedim^(i - 1)), ...
+                            kron(a_loc, speye(onsitedim^(clustersize-i))));
+
+                % calculate the mean-field bosonic coherence
+                a_mf = trace(a_site * tc.solution.rho);
+                % and input it into the theoretical equation... it should
+                % be zero
+                c = -2.0 * (-1.0 * Delta + 0.5i * gamma) / U;
+                % effective coupling to one site (factor of 0.5 as only the couplings into the system count for MF)
+                Jeff = J * (0.5 * numel(tc.input.interactions));  
+                % in the paper, the driving frequency term is not divided by 2
+                F = 0.5 * Omega;
+                amf_eq = @(a) ((F - Jeff * a) / (-1.0 * Delta + 0.5i * gamma) ...
+                                * hypergeom([], [1+c, c'], 8.0 * abs((F - Jeff * a) / U)^2) ...
+                                / hypergeom([], [c, c'], 8.0 * abs((F - Jeff * a) / U)^2)) - a;
+                % make the tolerance an order of magnitude larger than the
+                % steady state error
+                tc.assertEqual(amf_eq(a_mf), 0.0, 'AbsTol', 10.0 * tc.input.SSError);
+                
+                % and the expected occupation (different from paper in the
+                % hypergeometric function's third argument, but correct...)
+                a_occ = abs(2.0 * (F - Jeff * a_mf) / U)^2 * ...
+                            gammacomplex(c) * gammacomplex(c') / (gammacomplex(c+1) * gammacomplex(c'+1)) * ...
+                            hypergeom([], [c+1, c'+1], 8.0 * abs((F - Jeff * a_mf) / U)^2) ...
+                            / hypergeom([], [c, c'], 8.0 * abs((F - Jeff * a_mf) / U)^2);
+                % and similarly with the tolerance for the occupation 
+                % expectation value
+                tc.assertEqual(trace(a_site' * a_site * tc.solution.rho), a_occ, 'AbsTol', 10.0 * tc.input.SSError);
+            end
             
         end
         
