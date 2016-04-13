@@ -51,16 +51,20 @@ function rho_ss = CalculateSteadyState( input, init_rho, solution )
             end
         end
         
-        %% calculate the SVD of Liter
-        [U, S, V] = svd(full(Liter));
-        
-        %% the singular value is the solution to Liter * new_rho = 0
-        k = find(diag(S) < machine_tol, 1);
-        new_rho = V(:, k);
-        
-        %% reshape and normalise
-        new_rho = reshape(new_rho, [M M]);
-        new_rho = new_rho / trace(new_rho);
+        %% solutions to Liter * rho = 0 are overconstrained as we require
+        % the norm to be conserved.  we use this as the last line of the
+        % matrix to solve
+        normtrace = reshape(speye(M), [1 M^2]);
+        X = sparse([Liter(1:M^2-1, 1:M^2); ...
+                    normtrace]);
+
+        % the right hand side of the matrix equation is all zeros apart
+        % for the trace preserving part
+        B = sparse(M^2, 1, 1.0);
+
+        %% solve and reshape to get the new density matrix
+        v = X\B;
+        new_rho = reshape(v, [M M]);
         
         %% check whether the solution has converged
         error = max(max(abs(new_rho - solution.rho)));
