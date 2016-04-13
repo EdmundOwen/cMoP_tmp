@@ -10,6 +10,19 @@ function mat = CreateSuperoperatorMatrix( L, input, solution )
         mat = L0_Smat(input, solution);
         return
     elseif isequal(L, @LBTSS)
+        
+        % create the free evolution superoperator matrix and calculate its
+        % eigenvalues and eigenvectors if not already done
+        if ~isfield(solution, 'Uinv')
+            Lmat0 = CreateSuperoperatorMatrix(@L0, input, solution);
+            [U, D] = eig(full(Lmat0));
+            Uinv = eye(M^2) / U;
+        
+            solution.U = U;
+            solution.Uinv = Uinv;
+            solution.D = sparse(D);
+        end
+        
         mat = LBTSS_Smat(input, solution);
         return
     end
