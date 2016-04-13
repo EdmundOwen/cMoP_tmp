@@ -41,14 +41,14 @@ function result = LBTSS_Smat( input, solution )
             for a = 1:M^2
                 % calculate the projectors for the free evolution
                 % superoperator matrix
-                Ma = solution.U * sparse(a, a, solution.D(a, a), M^2, M^2) * solution.Uinv;
+                Ma = solution.U * sparse(a, a, 1.0, M^2, M^2) * solution.Uinv;
                 for b = 1:M^2
                     % skip if a or b are zero
                     if abs(solution.D(a, a)) < 1e-10 || abs(solution.D(b, b)) < 1e-10
                         continue;
                     end
                     % calculate Mb free evolution
-                    Mb = solution.U * sparse(b, b, solution.D(b, b), M^2, M^2) * solution.Uinv;
+                    Mb = solution.U * sparse(b, b, 1.0, M^2, M^2) * solution.Uinv;
                     
                     % calculate the memory kernel integrand weights
                     d = trace(Bl * reshape(Mb * reshape(dBk * rho, [M^2 1]), [M M]));
