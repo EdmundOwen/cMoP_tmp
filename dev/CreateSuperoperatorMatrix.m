@@ -6,7 +6,10 @@ function mat = CreateSuperoperatorMatrix( L, input, solution )
     % get the matrix dimension
     M = input.M;
 
-    if isequal(L, @LBTSS)
+    if isequal(L, @L0)
+        mat = L0_Smat(input, solution);
+        return
+    elseif isequal(L, @LBTSS)
         mat = LBTSS_Smat(input, solution);
         return
     end

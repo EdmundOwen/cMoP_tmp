@@ -32,7 +32,7 @@ function rho_ss = CalculateSteadyState( input, init_rho, solution )
     % eigenvalues and eigenvectors
     if ~isfield(solution, 'Uinv')
         Lmat0 = CreateSuperoperatorMatrix(@L0, input, solution);
-        [U, D] = eig(Lmat0);
+        [U, D] = eig(full(Lmat0));
         Uinv = eye(M^2) / U;
         
         solution.U = U;
@@ -52,7 +52,7 @@ function rho_ss = CalculateSteadyState( input, init_rho, solution )
         end
         
         %% calculate the SVD of Liter
-        [U, S, V] = svd(Liter);
+        [U, S, V] = svd(full(Liter));
         
         %% the singular value is the solution to Liter * new_rho = 0
         k = find(diag(S) < machine_tol, 1);
