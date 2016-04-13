@@ -21,7 +21,7 @@ function result = LBT( input, mat, solution )
     for k = 1:numel(interactions)
         for l = 1:numel(interactions)
             
-            if ~(((k == 1 || k == 2) && (l == 1 || l == 2)) || ((k == 3 || k == 4) && (l == 3 || l == 4)))
+            if ~interactions{k}{4}(l)
                 continue
             end
             
