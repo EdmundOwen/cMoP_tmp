@@ -8,6 +8,7 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
         rho
         solution
         absTol = 1e-7;
+        iterTol = 1e-4;
     end
     
     properties (MethodSetupParameter)
@@ -62,7 +63,7 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
             for i = 1:numel(tc.input.L)
                 % create a superoperator matrix and diagonalize
                 Lmat = CreateSuperoperatorMatrix( tc.input.L{i}, tc.input, tc.solution );
-                [U, D] = eig(Lmat);
+                [U, D] = eig(full(Lmat));
                 
                 for j = 1:size(U, 1)
                     % input the jth eigenvector into the operator L
@@ -126,7 +127,7 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
             result = CalculateSteadyState(tc.input, tc.rho, tc.solution);
             
             % test to make sure that the steady state solution is correct
-            tc.assertEqual(expected, result, 'AbsTol', tc.absTol);
+            tc.assertEqual(full(result), expected, 'AbsTol', tc.absTol);
             
         end
         
@@ -159,7 +160,7 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
             result_ss = CalculateSteadyState(tc.input, tc.rho, tc.solution);
             
             % compare the two results
-            tc.assertEqual(result_ss, result_t.rho, 'AbsTol', tc.input.SSError);
+            tc.assertEqual(full(result_ss), result_t.rho, 'AbsTol', tc.input.SSError);
             
         end
         
@@ -251,14 +252,44 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
             % make sure that there is a steady state solution
             tc.assertTrue(CheckForSteadyState(CreateSuperoperatorMatrix(@L0, tc.input, tc.solution)));
             
-            result = CalculateSteadyState(tc.input, tc.rho, tc.solution);
+            % load the results from Michael's code: clusterSS
+            clusterSS = load('test_data/clusterSS_test.mat');
             
-            a_loc = annihilation(tc.input.onsitedim);
-            a_loc = kron(a_loc, eye(2));
-            n = a_loc' * a_loc;
-            n = trace(n * result);
+            % cycle through J
+            for i = 1:clusterSS.NJ
+                
+                % assign a new J and reset the system
+                varargin = {'clustersize', clusterSS.clustersize, ...
+                            'onsitedim', clusterSS.onsitedim, ...
+                            'J', (i-1) * clusterSS.dJ, ...
+                            'Delta', clusterSS.Delta, ...
+                            'U', clusterSS.U, ...
+                            'Omega', clusterSS.Omega, ...
+                            'gamma', clusterSS.gamma};
+                tc.input = SetupSystem(tc.input, varargin);
+                tc.input = SetupEnvironment(tc.input, {});
+                
+                % calculate the new steady state
+                result = CalculateSteadyState(tc.input, tc.rho, tc.solution);
             
-            tc.assertEqual(n, 0.0);
+                % calculate the expectation of the annihilation operator 
+                % for the first site
+                a = annihilation(tc.input.onsitedim);
+                for j = 2:tc.input.clustersize
+                    a = kron(a, eye(tc.input.onsitedim));
+                end
+                a_result = trace(a * result);
+                
+                % calculate the occupation of the first site
+                n = a' * a;
+                n_result = trace(n * result);
+            
+                % assert that these calculated values must be equal to
+                % those obtained with clusterSS
+                tc.assertEqual(a_result, clusterSS.a(i), 'AbsTol', tc.iterTol);
+                tc.assertEqual(n_result, clusterSS.n(i), 'AbsTol', tc.iterTol);
+                
+            end
             
         end
         

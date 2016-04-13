@@ -7,6 +7,18 @@ function [result, solution] = LBTSS( input, mat, solution )
     interactions = input.interactions;
     rho = solution.rho;
         
+    %% create the free evolution superoperator matrix and calculate its
+    % eigenvalues and eigenvectors if not already done
+    if ~isfield(solution, 'Uinv')
+        Lmat0 = CreateSuperoperatorMatrix(@L0, input, solution);
+        [U, D] = eig(full(Lmat0));
+        Uinv = eye(M^2) / U;
+       
+        solution.U = U;
+        solution.Uinv = Uinv;
+        solution.D = sparse(D);
+    end
+        
     %% calculate the Born term commutator
     LBTSS = zeros(M, M);
     %% cycle through each of the terms in the interaction Hamiltonian
@@ -21,22 +33,27 @@ function [result, solution] = LBTSS( input, mat, solution )
             J2 = interactions{k}{1} * interactions{l}{1};
             Al = interactions{l}{2};
             Bl = interactions{l}{3};
+            Ak = interactions{k}{2};
+            Bk = interactions{k}{3};            
         
             % calculate fluctuations using the previous iteration
             % density matrix in the traces
-            Ak = interactions{k}{2};
-            Bk = interactions{k}{3};            
             dAk = Ak - trace(Ak * rho) * speye(size(Ak));
             dBk = Bk - trace(Bk * rho) * speye(size(Bk));
             
             rhs = zeros(M, M);
             %% calculate the superoperator projector sum
             for a = 1:M^2
+                % calculate the projectors for the free evolution
+                % superoperator matrix
+                Ma = solution.U * sparse(a, a, 1.0, M^2, M^2) * solution.Uinv;
                 for b = 1:M^2
-                    % calculate the projectors for the free evolution
-                    % superoperator matrix
-                    Ma = solution.U * sparse(a, a, solution.D(a, a), M^2, M^2) * solution.Uinv;
-                    Mb = solution.U * sparse(b, b, solution.D(b, b), M^2, M^2) * solution.Uinv;
+                    % skip if a or b are zero
+                    if abs(solution.D(a, a)) < 1e-10 || abs(solution.D(b, b)) < 1e-10
+                        continue;
+                    end
+                    % calculate Mb free evolution
+                    Mb = solution.U * sparse(b, b, 1.0, M^2, M^2) * solution.Uinv;
                     
                     % calculate the memory kernel integrand weights
                     d = trace(Bl * reshape(Mb * reshape(dBk * rho, [M^2 1]), [M M]));
