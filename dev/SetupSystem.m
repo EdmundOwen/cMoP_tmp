@@ -8,6 +8,7 @@ function input = SetupSystem(input, varargin)
     p = inputParser;
     defaultClusterSize = GetFromInput(input, 'clustersize', 1);
     defaultOnsiteDim = GetFromInput(input, 'onsitedim', 2);
+    defaultCoordination = GetFromInput(input, 'coordination', 2);
     defaultDelta = GetFromInput(input, 'Delta', 1.0);
     defaultJ = GetFromInput(input, 'J', 1.0);
     defaultU = GetFromInput(input, 'U', 0.0);
@@ -18,6 +19,7 @@ function input = SetupSystem(input, varargin)
     
     addOptional(p, 'clustersize', defaultClusterSize, @isnumeric);
     addOptional(p, 'onsitedim', defaultOnsiteDim, @isnumeric);
+    addOptional(p, 'coordination', defaultCoordination, @isnumeric);
     addOptional(p, 'Delta', defaultDelta, @isnumeric);
     addOptional(p, 'J', defaultJ, @isnumeric);
     addOptional(p, 'U', defaultU, @isnumeric);
@@ -39,11 +41,14 @@ function input = SetupSystem(input, varargin)
     input.dim = p.Results.dim;
     input.L = p.Results.operators;
    
+    %% and the system coordination number
+    input.coordination = p.Results.coordination;
+    
     %% calculate the system Hilbert space dimension
     input.onsitedim = p.Results.onsitedim;
     input.clustersize = p.Results.clustersize;
     input.M = input.onsitedim ^ input.clustersize;
-    
+       
     %% create the system Hamiltonian
     input.H0 = SetupH0(input);
     

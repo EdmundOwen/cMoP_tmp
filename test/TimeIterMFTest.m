@@ -81,8 +81,9 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) T
                 % and input it into the theoretical equation... it should
                 % be zero
                 c = -2.0 * (-1.0 * Delta + 0.5i * gamma) / U;
-                % effective coupling to one site (factor of 0.5 as only the couplings into the system count for MF)
-                Jeff = J * (0.5 * numel(tc.input.interactions));  
+                % effective coupling to one site is multiplied by the
+                % system coordination number
+                Jeff = J * tc.input.coordination;  
                 % in the paper, the driving frequency term is not divided by 2
                 F = 0.5 * Omega;
                 amf_eq = @(a) ((F - Jeff * a) / (-1.0 * Delta + 0.5i * gamma) ...
