@@ -14,6 +14,19 @@ function result = LBTSS_Smat( input, solution )
     protoleft = kron(speye(M), lintmp);
     protoright = kron(lintmp', speye(M));
     
+    %% precalculate the projector matrices Ma and Mb
+    Mmat = cell(M^2, 1);
+    for a = 1:M^2
+        Mmat{a} = solution.U * sparse(a, a, 1.0, M^2, M^2) * solution.Uinv;
+    end
+    %% and reciprocals of the eigenvalues
+    Dinv = zeros(M^2);
+    for a = 1:M^2
+        for b = 1:M^2
+            Dinv(a, b) = 1.0 / (solution.D(a, a) + solution.D(b, b));
+        end
+    end
+    
     %% calculate the Born term commutator
     LBTSS = sparse(M^2, M^2);
     %% cycle through each of the terms in the interaction Hamiltonian
@@ -36,19 +49,23 @@ function result = LBTSS_Smat( input, solution )
             dAk = Ak - trace(Ak * rho) * speye(size(Ak));
             dBk = Bk - trace(Bk * rho) * speye(size(Bk));
             
+            % precalculate the left and right matrix multiplications of dAk
+            dAk_left = matprod(dAk, protoleft);
+            dAk_right = matprod(dAk, protoright);
+            
             rhs = sparse(M^2, M^2);
             %% calculate the superoperator projector sum
             for a = 1:M^2
                 % calculate the projectors for the free evolution
                 % superoperator matrix
-                Ma = solution.U * sparse(a, a, 1.0, M^2, M^2) * solution.Uinv;
+                Ma = Mmat{a};
                 for b = 1:M^2
                     % skip if a or b are zero
                     if abs(solution.D(a, a)) < 1e-10 || abs(solution.D(b, b)) < 1e-10
                         continue;
                     end
                     % calculate Mb free evolution
-                    Mb = solution.U * sparse(b, b, 1.0, M^2, M^2) * solution.Uinv;
+                    Mb = Mmat{b};
                     
                     % calculate the memory kernel integrand weights
                     d = trace(Bl * reshape(Mb * reshape(dBk * rho, [M^2 1]), [M M]));
@@ -56,11 +73,10 @@ function result = LBTSS_Smat( input, solution )
                     
                     % calculate the commutator between the steady state 
                     % system density matrix and the fluctuations dAk
-                    tmprhs = matprod(dAk, protoleft) * d - matprod(dAk, protoright) * s;
+                    tmprhs = dAk_left * d - dAk_right * s;
                     
                     % operate on this commutator with Ma and weight
-                    tmprhs = -1.0 / (solution.D(a, a) + solution.D(b, b)) ...
-                                       * Ma * tmprhs;
+                    tmprhs = -1.0 * Dinv(a, b) * Ma * tmprhs;
                     
                     % add this to the right hand side
                     rhs = rhs + tmprhs;
