@@ -10,7 +10,7 @@ function input = SetupTimeIter(input, varargin)
     defaultMethod = GetFromInput(input, 'method', 'crank-nicolson');
     
     addOptional(p, 'dt', defaultdt, @isnumeric);
-    addOptional(p, 'Nt', defaultNt, @isinteger);
+    addOptional(p, 'Nt', defaultNt, @isnumeric);
     addOptional(p, 'method', defaultMethod);
     
     %% parse the inputs
