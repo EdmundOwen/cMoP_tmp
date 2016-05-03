@@ -37,6 +37,10 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) T
             %%% the original CMoP paper 
             %%% http://dx.doi.org/10.1103/PhysRevB.89.245108
             
+            % add SaveRho to the list of probes to evaluate the single-site
+            % density
+            tc.input.probelist{end+1} = @SaveRho;
+            
             % setup the system as a unitary, undriven evolution of a spin
             % chain
             onsitedim = 2;
