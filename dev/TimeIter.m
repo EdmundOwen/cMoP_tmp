@@ -19,7 +19,7 @@ function result = TimeIter(input, rho)
         
         if input.memoryNeeded
             % save results from the old time step 
-            result = SaveMemory(result, input, i);
+            result = SaveMemory(result, input);
         end
         
         % iterate the density matrix and memory functions
