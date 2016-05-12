@@ -17,20 +17,14 @@ function H0 = SetupH0(input)
             + 0.5 * (input.Omega * (a_loc') + input.Omega' * a_loc);
     
     %% tensor product to give cluster onsite Hamiltonian
-    H0 = kron(Hloc, speye(onsitedim^(clustersize-1)));
-	for i = 2:clustersize
-        H0 = H0 + kron(speye(onsitedim^(i - 1)), kron(Hloc, speye(onsitedim^(clustersize - i))));
-    end
+    H0 = TensorAddOperator(Hloc, onsitedim, clustersize);
     
     %% add the couplings, which depends on the dimensionality of the system
     switch (input.dim)
         case 1
             HintlocJ = -1.0 * input.J * (kron(a_loc', a_loc) + kron(a_loc, a_loc'));
             HintlocV = input.V * kron(a_loc' * a_loc, a_loc' * a_loc);
-            for i = 1:clustersize - 1
-                H0 = H0 + kron(speye(onsitedim^(i - 1)), ...
-                        kron(HintlocJ + HintlocV, speye(onsitedim^(clustersize - i - 1))));
-            end
+            H0 = H0 + TensorAddOperator(HintlocJ + HintlocV, onsitedim, clustersize-1);
             
         otherwise
             msgID = 'SetupH0:InvalidDimension';
