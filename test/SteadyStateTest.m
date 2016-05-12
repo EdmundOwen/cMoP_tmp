@@ -241,8 +241,8 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
         
         function TestSteadyStateBornTerm(tc)
             % tests the steady state solutions of the driven dissipative 
-            % spin chain using the initial cMoP paper as a guide...
-            % how, I don't know yet...................!
+            % spin chain using the initial cMoP paper as a guide by testing
+            % against results created by clusterSS
             
             % check that the input superoperators contains the Born terms
             % and that it's a spin chain

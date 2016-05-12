@@ -172,6 +172,19 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) T
             tc.assertEqual(results.rho, expected, 'AbsTol', tc.iterTol);
         end
         
+        % test to make sure that if the Hamiltonian changes, the time
+        % evolution changes too
+        function TestChangeH0(tc)
+            % replace the Hamiltonian with the identity
+            newH0 = speye(tc.input.M);
+            tc.input.H0 = newH0;
+            
+            % evolve using the identity
+            results = TimeIter(tc.input, tc.rho);
+            
+            % check that the density matrix hasn't changed
+            tc.assertEqual(abs(results.rho), abs(tc.rho), 'AbsTol', tc.iterTol);
+        end
     end
     
 end
