@@ -12,6 +12,7 @@ function input = SetupSystem(input, varargin)
     defaultDelta = GetFromInput(input, 'Delta', 1.0);
     defaultJ = GetFromInput(input, 'J', 1.0);
     defaultU = GetFromInput(input, 'U', 0.0);
+    defaultV = GetFromInput(input, 'V', 0.0);
     defaultOmega = GetFromInput(input, 'Omega', 0.0);
     defaultgamma = GetFromInput(input, 'gamma', 0.0);
     defaultOperators = GetFromInput(input, 'L', { @L0 });
@@ -23,6 +24,7 @@ function input = SetupSystem(input, varargin)
     addOptional(p, 'Delta', defaultDelta, @isnumeric);
     addOptional(p, 'J', defaultJ, @isnumeric);
     addOptional(p, 'U', defaultU, @isnumeric);
+    addOptional(p, 'V', defaultV, @isnumeric);
     addOptional(p, 'Omega', defaultOmega, @isnumeric);
     addOptional(p, 'gamma', defaultgamma, @isnumeric);
     addOptional(p, 'operators', defaultOperators);
@@ -36,6 +38,7 @@ function input = SetupSystem(input, varargin)
     input.Delta = p.Results.Delta;
     input.J = p.Results.J;
     input.U = p.Results.U;
+    input.V = p.Results.V;
     input.Omega = p.Results.Omega;
     input.gamma = p.Results.gamma;
     input.dim = p.Results.dim;

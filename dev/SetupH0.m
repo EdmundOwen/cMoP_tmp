@@ -25,10 +25,11 @@ function H0 = SetupH0(input)
     %% add the couplings, which depends on the dimensionality of the system
     switch (input.dim)
         case 1
-            Hintloc = -1.0 * input.J * (kron(a_loc', a_loc) + kron(a_loc, a_loc'));
+            HintlocJ = -1.0 * input.J * (kron(a_loc', a_loc) + kron(a_loc, a_loc'));
+            HintlocV = input.V * kron(a_loc' * a_loc, a_loc' * a_loc);
             for i = 1:clustersize - 1
                 H0 = H0 + kron(speye(onsitedim^(i - 1)), ...
-                        kron(Hintloc, speye(onsitedim^(clustersize - i - 1))));
+                        kron(HintlocJ + HintlocV, speye(onsitedim^(clustersize - i - 1))));
             end
             
         otherwise

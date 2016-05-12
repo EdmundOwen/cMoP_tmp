@@ -5,6 +5,7 @@
 function input = SetupEnvironment( input, varargin )
 
     J = input.J;
+    V = input.V;
     onsitedim = input.onsitedim;
     clustersize = input.clustersize;
     
@@ -16,17 +17,30 @@ function input = SetupEnvironment( input, varargin )
 % example, if a correlation occurs on the right hand side of a line
 % segment, it cannot be transmitted back from the left hand side of the
 % segment
+% correlation = [1 1 0 0 0 0 0 0; ...
+%                1 1 0 0 0 0 0 0; ...
+%                0 0 1 1 0 0 0 0; ...
+%                0 0 1 1 0 0 0 0; ...
+%                0 0 0 0 1 1 0 0; ...
+%                0 0 0 0 1 1 0 0; ...
+%                0 0 0 0 0 0 1 1; ...
+%                0 0 0 0 0 0 1 1];
+           
 correlation = [1 1 0 0; ...
                1 1 0 0; ...
                0 0 1 1; ...
-               0 0 1 1];    
-    
+               0 0 1 1];
+
 %% Create a cell array containing the interactions with the environment
 H_int_list = {};
 H_int_list{1} = {-J, 1, a_loc, clustersize, a_loc', correlation(1, :)};
 H_int_list{2} = {-J, 1, a_loc', clustersize, a_loc, correlation(2, :)};
 H_int_list{3} = {-J, clustersize, a_loc', 1, a_loc, correlation(3, :)};
 H_int_list{4} = {-J, clustersize, a_loc, 1, a_loc', correlation(4, :)};
+% H_int_list{1} = {V, 1, a_loc, clustersize, a_loc', correlation(1, :)};
+% H_int_list{2} = {V, 1, a_loc', clustersize, a_loc, correlation(2, :)};
+% H_int_list{3} = {V, clustersize, a_loc', 1, a_loc, correlation(3, :)};
+% H_int_list{4} = {V, clustersize, a_loc, 1, a_loc', correlation(4, :)};
 
 
     %% create_interaction_operators for H_int_list
