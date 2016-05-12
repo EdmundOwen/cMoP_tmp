@@ -16,7 +16,7 @@ function result = SaveDensity( result, input, i )
     % calculate the density on each site
     n = zeros(clustersize, 1);
     for j = 1:clustersize
-        nop = kron(kron(speye(onsitedim^(j - 1)), a' * a), speye(onsitedim^(clustersize - j)));
+        nop = InsertOperator(a' * a, j, onsitedim, clustersize);
         n(j) = abs(trace(nop * rho));
     end
 

@@ -206,8 +206,7 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
             % for each site
             a_loc = annihilation(onsitedim);
             for i = 1:clustersize
-                a_site = kron(speye(onsitedim^(i - 1)), ...
-                            kron(a_loc, speye(onsitedim^(clustersize-i))));
+                a_site = InsertOperator(a_loc, i, onsitedim, clustersize);
 
                 % calculate the mean-field bosonic coherence
                 a_mf = trace(a_site * tc.solution.rho);

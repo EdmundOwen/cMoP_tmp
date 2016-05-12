@@ -8,10 +8,10 @@ function H = TensorAddOperator( Hloc, onsitedim, clustersize )
     end
 
     % initialise the Hamiltonian
-    H = kron(Hloc, speye(onsitedim^(clustersize-1)));
+    H = InsertOperator(Hloc, 1, onsitedim, clustersize);
     % and add the rest
     for i = 2:clustersize
-        H = H + kron(speye(onsitedim^(i - 1)), kron(Hloc, speye(onsitedim^(clustersize - i))));
+        H = H + InsertOperator(Hloc, i, onsitedim, clustersize);
     end
 
 end

@@ -17,7 +17,7 @@ function result = SaveCorrelation( result, input, i )
     % calculate the nearest-neighbour correlations for each site
     g2 = zeros(clustersize-1, 1);
     for j = 1:clustersize-1
-        g2op = kron(kron(kron(speye(onsitedim^(j - 1)), a), a'), speye(onsitedim^(clustersize - j - 1)));
+        g2op = InsertOperator(kron(a, a'), j, onsitedim, clustersize-1);
         g2(j) = trace(g2op * rho);
     end
 

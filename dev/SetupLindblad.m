@@ -15,7 +15,7 @@ function A_Lindblad = SetupLindblad(input)
     
     %% tensor product to give cluster Lindblad operator
     for i = 1:clustersize
-        A_Lindblad{i} = kron(speye(onsitedim^(i - 1)), kron(a_loc, speye(onsitedim^(clustersize - i))));
+        A_Lindblad{i} = InsertOperator(a_loc, i, onsitedim, clustersize);
     end
 
 end

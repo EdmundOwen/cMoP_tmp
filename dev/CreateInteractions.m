@@ -16,12 +16,10 @@ function input = CreateInteractions( input, interaction_list )
         B_site_operator = interaction_list{i}{5};    
     
         % create system interaction operator
-        interaction_list{i}{7} = kron(speye(onsitedim^(A_site_label-1)), ...
-                kron(A_site_operator, speye(onsitedim^(clustersize-A_site_label))));
+        interaction_list{i}{7} = InsertOperator(A_site_operator, A_site_label, onsitedim, clustersize);
         % create environment interaction operator 
         % (assumes that the system is translationally invariant)   
-        interaction_list{i}{8} = kron(speye(onsitedim^(B_site_label - 1)), ...
-                kron(B_site_operator, speye(onsitedim^(clustersize-B_site_label))));
+        interaction_list{i}{8} = InsertOperator(B_site_operator, B_site_label, onsitedim, clustersize);
         
         % input into interactions struct
         input.interactions{i} = {interaction_list{i}{1}, interaction_list{i}{7}, ...

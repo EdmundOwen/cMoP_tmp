@@ -88,7 +88,7 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) T
             
             % calculate the occupation of the first site
             a_loc = annihilation(onsitedim);
-            n1 = kron(a_loc' * a_loc, eye(onsitedim^(clustersize-1)));
+            n1 = InsertOperator(a_loc' * a_loc, 1, onsitedim, clustersize);
             for i = 1:tc.input.Nt
                 occ(i, 1) = abs(trace(n1 * result.hist{i}.rho));
                 occ(i, 2) = exactocc(i * tc.input.dt);
