@@ -60,6 +60,9 @@ function rho_ss = CalculateSteadyState( input, init_rho, solution )
         %% check whether the solution has converged
         error = max(max(abs(new_rho - solution.rho)));
         if error < input.SSError
+            if CheckBool(input, 'verbose', false)
+                sprintf('# iterations to convergence: %i', i)
+            end
             converged = true;
             break;
         end
@@ -71,9 +74,15 @@ function rho_ss = CalculateSteadyState( input, init_rho, solution )
     
     %% check to make sure the solution is converged
     if ~converged
-        exception = MException('CalculateSteadyState:NotConverged', ...
-            'convergence not acheived');
-        throw(exception)
+        % throw an exception if these are not being ignored
+        if ~CheckBool(input, 'ignoreExceptions', true)
+            exception = MException('CalculateSteadyState:NotConverged', ...
+                'convergence not acheived');
+            throw(exception)
+        end
+        
+        rho_ss = -1;
+        return
     end
     
 	%% return the calculated value    
