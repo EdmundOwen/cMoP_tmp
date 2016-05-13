@@ -61,7 +61,7 @@ function rho_ss = CalculateSteadyState( input, init_rho, solution )
         error = max(max(abs(new_rho - solution.rho)));
         if error < input.SSError
             if CheckBool(input, 'verbose', false)
-                sprintf('# iterations to convergence: %i', i)
+                fprintf('# iterations to convergence: %i\n', i)
             end
             converged = true;
             break;
