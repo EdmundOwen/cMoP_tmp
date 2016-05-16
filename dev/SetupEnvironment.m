@@ -43,7 +43,7 @@ H_int_list{4} = {-J, clustersize, a_loc, 1, a_loc', correlation(4, :)};
 % H_int_list{4} = {V, clustersize, a_loc, 1, a_loc', correlation(4, :)};
 
     %% actually create the interactions
-    input = CreateInteractions(input, H_int_list);
+    input.interactions = CreateInteractions(input, H_int_list);
 
 end
 

@@ -1,11 +1,13 @@
 %%% a function to add the interactions of the system with its environment
 %%% into the input struct from a template defined by the interaction_list
 
-function input = CreateInteractions( input, interaction_list )
+function interactions = CreateInteractions( input, interaction_list )
 
     %% retrieve useful data from input
     onsitedim = input.onsitedim;
     clustersize = input.clustersize;
+    
+    interactions = cell(numel(interaction_list), 1);
 
     %% create_interaction_operators for H_int_list
     for i = 1:numel(interaction_list)
@@ -22,7 +24,7 @@ function input = CreateInteractions( input, interaction_list )
         interaction_list{i}{8} = InsertOperator(B_site_operator, B_site_label, onsitedim, clustersize);
         
         % input into interactions struct
-        input.interactions{i} = {interaction_list{i}{1}, interaction_list{i}{7}, ...
+        interactions{i} = {interaction_list{i}{1}, interaction_list{i}{7}, ...
                                     interaction_list{i}{8}, interaction_list{i}{6}};
     end
 
