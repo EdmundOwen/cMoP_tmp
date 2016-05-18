@@ -16,7 +16,8 @@ gamma = 0.001;
 
 %% setup the inputs
 input.exists = true;
-input = SetupSystem(input, {'clustersize', clustersize, 'onsitedim', onsitedim, 'gamma', gamma, 'operators', { @L0, @LMF, @LBTSS }});
+input = SetupSystem(input, {'clustersize', clustersize, 'onsitedim', onsitedim, ...
+                            'gamma', gamma, 'operators', { @L0, @LMF }});%, @LBTSS }});
 input = SetupEnvironment(input, {});
 input = SetupSteadyState(input, {});
 
@@ -48,6 +49,15 @@ H0 = H0 + TensorAddOperator(Hint, onsitedim, clustersize-1);
 % and insert the Hamiltonian into the input struct
 input.H0 = H0;
 
+%% alter the Lindblad weights to make them applicable for the system Wannier states
+% diagonal contribution
+input.Lindblad_weights = gamma * (2.0 * wA0^2 + wB0^2) * eye(clustersize);
+% off-diagonal contributions
+for i = 1:clustersize-1
+    input.Lindblad_weights(i, i+1) = 2.0 * gamma * wA0^2;
+    input.Lindblad_weights(i+1, i) = input.Lindblad_weights(i, i+1);
+end
+
 %% create a new set of interactions for the Wannier states
 int_list = {};
 fac = 0.5 * U * wA0^4;
@@ -68,15 +78,24 @@ int_list{12} = {2.0 * fac, clustersize, a', 1, (a')*a*a, correlation(12, :)};
 int_list{13} = {2.0 * fac, clustersize, (a')*a*(a'), 1, a, correlation(13, :)};
 int_list{14} = {2.0 * fac, clustersize, a, 1, (a')*a*(a'), correlation(14, :)};
 % create the interactions
-input = CreateInteractions(input, int_list);
+interactions = CreateInteractions(input, int_list);
+
+%% Add the set of dissipator interactions.  These are due to the non-local
+% nature of the dissipation in the Wannier basis
+interactions{15} = {0.5i * gamma * wA0^2, input.A_Lindblad{2}, input.A_Lindblad{1}'};
+interactions{16} = {-0.5i * gamma * wA0^2, input.A_Lindblad{2}', input.A_Lindblad{1}};
+interactions{17} = {0.5i * gamma * wA0^2, input.A_Lindblad{1}, input.A_Lindblad{2}'};
+interactions{18} = {-0.5i * gamma * wA0^2, input.A_Lindblad{1}', input.A_Lindblad{2}};
+% set the interactions in the input struct
+input.interactions = interactions;
 
 %% find the steady state solution
 input.verbose = true;
 result = CalculateSteadyState(input, rho, solution);
 
 %% analyse the data...
-g2 = kron((a') * a, (a') * a);
-n2 = kron(a' * a, eye(onsitedim));
+g2 = kron(kron((a') * a, (a') * a), eye(onsitedim^(clustersize-2)));
+n2 = kron(a' * a, eye(onsitedim^(clustersize-1)));
 nval = trace(n2 * result)
 g2val = trace(g2 * result) / nval^2
 
