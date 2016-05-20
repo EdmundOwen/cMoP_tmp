@@ -2,7 +2,6 @@
 
 function result = LMF( input, mat, solution )
 
-    %% if the input rho is a struct, extract the density matrix
     %% if the input matrix is a struct, throw an error
     if isa(mat, 'struct')
         exception = MException('L0:InputInvalid', ...
@@ -11,7 +10,7 @@ function result = LMF( input, mat, solution )
     end
     
     result = zeros(size(mat));
-
+    
     %% extract the interactions from the input
     SE_interactions = input.interactions;
     
@@ -21,10 +20,18 @@ function result = LMF( input, mat, solution )
         %% extract interaction data
         interaction_strength = SE_interactions{i}{1};
         A = SE_interactions{i}{2};
-        B = SE_interactions{i}{3};        
-        
+        B = SE_interactions{i}{3};
+        interaction_type = SE_interactions{i}{5};
+    
         %% calculate the mean field term for this interaction
-        result = result + -1.0i * interaction_strength * comm(B, A, mat, solution.rho);
+        switch (interaction_type)
+            case 'unitary'
+                result = result + -1.0i * interaction_strength * comm(B, A, mat, solution.rho);
+            case 'dissipative'
+                result = result + 0.5 * interaction_strength * (comm(B', A, mat, solution.rho) - comm(B, A', mat, solution.rho));
+            otherwise
+                throw exception
+        end                
     
     end
     
