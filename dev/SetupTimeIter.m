@@ -7,7 +7,7 @@ function input = SetupTimeIter(input, varargin)
     p = inputParser;
     defaultdt = GetFromInput(input, 'dt', 0.001);
     defaultNt = GetFromInput(input, 'Nt', 1000);
-    defaultMethod = GetFromInput(input, 'method', 'crank-nicolson');
+    defaultMethod = GetFromInput(input, 'method', 'heun');
     defaultNTest = GetFromInput(input, 'NTest', 1);
     defaultProbes = GetFromInput(input, 'probes', {});
     
