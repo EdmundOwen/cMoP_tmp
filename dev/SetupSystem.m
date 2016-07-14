@@ -6,29 +6,19 @@ function input = SetupSystem(input, varargin)
 
     %% define default input values
     p = inputParser;
-    defaultClusterSize = GetFromInput(input, 'clustersize', 1);
-    defaultOnsiteDim = GetFromInput(input, 'onsitedim', 2);
-    defaultCoordination = GetFromInput(input, 'coordination', 2);
-    defaultDelta = GetFromInput(input, 'Delta', 1.0);
-    defaultJ = GetFromInput(input, 'J', 1.0);
-    defaultU = GetFromInput(input, 'U', 0.0);
-    defaultV = GetFromInput(input, 'V', 0.0);
-    defaultOmega = GetFromInput(input, 'Omega', 0.0);
-    defaultgamma = GetFromInput(input, 'gamma', 0.0);
-    defaultOperators = GetFromInput(input, 'L', { @L0 });
-    defaultdim = GetFromInput(input, 'dim', 1);
     
-    addOptional(p, 'clustersize', defaultClusterSize, @isnumeric);
-    addOptional(p, 'onsitedim', defaultOnsiteDim, @isnumeric);
-    addOptional(p, 'coordination', defaultCoordination, @isnumeric);
-    addOptional(p, 'Delta', defaultDelta, @isnumeric);
-    addOptional(p, 'J', defaultJ, @isnumeric);
-    addOptional(p, 'U', defaultU, @isnumeric);
-    addOptional(p, 'V', defaultV, @isnumeric);
-    addOptional(p, 'Omega', defaultOmega, @isnumeric);
-    addOptional(p, 'gamma', defaultgamma, @isnumeric);
-    addOptional(p, 'operators', defaultOperators);
-    addOptional(p, 'dim', defaultdim, @isnumeric);
+    %% add the parser options and defaults
+    p = AddParserOption(p, input, 'clustersize', 1, @isnumeric);
+    p = AddParserOption(p, input, 'onsitedim', 2, @isnumeric);
+    p = AddParserOption(p, input, 'coordination', 2, @isnumeric);
+    p = AddParserOption(p, input, 'Delta', 1.0, @isnumeric);
+    p = AddParserOption(p, input, 'J', 1.0, @isnumeric);
+    p = AddParserOption(p, input, 'U', 0.0, @isnumeric);
+    p = AddParserOption(p, input, 'V', 0.0, @isnumeric);
+    p = AddParserOption(p, input, 'Omega', 0.0, @isnumeric);
+    p = AddParserOption(p, input, 'gamma', 0.0, @isnumeric);
+    p = AddParserOption(p, input, 'L', { @L0 }, true);
+    p = AddParserOption(p, input, 'dim', 1, @isnumeric);
     
     %% parse the inputs
     tmp = varargin{:};
