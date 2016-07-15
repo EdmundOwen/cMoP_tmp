@@ -13,6 +13,7 @@ function result = LBT( input, mat, solution )
     M = input.M;
     dt = input.dt;
     interactions = input.interactions;
+    partitionIndex = input.partitionIndex;
     
     %% calculate the Born term commutator
     LBT = zeros(M, M);
@@ -21,29 +22,31 @@ function result = LBT( input, mat, solution )
     for k = 1:numel(interactions)
         for l = 1:numel(interactions)
             
-            if ~interactions{k}{4}(l)
+            if ~interactions{k}.Correlations(l)
                 continue
             end
             
             %% get the relevant system operators
-            J2 = interactions{k}{1} * interactions{l}{1};
-            Al = interactions{l}{2};
-            Bl = interactions{l}{3};
+            J2 = interactions{k}.interactionStrength * interactions{l}.interactionStrength;
+            Al = interactions{l}.A;
+            Bl = interactions{l}.B;
         
             rhs = zeros(M, M);
             %% perform rhs integration
-            for tprime = 1:numel(solution.hist)
+            for tprime = 1:numel(solution.hist{partitionIndex})
             
                 %% calculate the slice with the contracted d and s term
-                slice = solution.hist{tprime}.c{k} * trace(Bl * solution.hist{tprime}.dkern{k}) ...
-                            - solution.hist{tprime}.r{k} * trace(Bl * solution.hist{tprime}.skern{k});
+                slice = solution.hist{partitionIndex}{tprime}.c{k} ...
+                                        * trace(Bl.Operator * solution.hist{partitionIndex}{tprime}.dkern{k}) ...
+                         - solution.hist{partitionIndex}{tprime}.r{k} ...
+                                        * trace(Bl.Operator * solution.hist{partitionIndex}{tprime}.skern{k});
             
                 %% add the slice the integral
                 rhs = rhs + dt * slice;
             end
         
             %% and evaluate the commutator for this set of interactions
-            LBT = LBT - J2 * (Al * rhs - rhs * Al);
+            LBT = LBT - J2 * (Al.Operator * rhs - rhs * Al.Operator);
         
         end
     end

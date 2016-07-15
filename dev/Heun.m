@@ -15,7 +15,7 @@ function [mat, solution] = Heun(mat, solution, L, input, dt)
     
     %% iterate the memory functions (if needed)
     if input.memoryNeeded && ~input.isMemory
-        solution = IterateMemory(solution, input, dt);
+        solution = IterateMemory(solution, input, dt, 'heun');
     end
     
     %% recalculate the rhs of the Louiville equation using the predicted values

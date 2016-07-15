@@ -6,4 +6,3 @@ function result = InsertOperator( operator, position, onsitedim, clustersize )
               kron(operator, speye(onsitedim^(clustersize - position))));
 
 end
-

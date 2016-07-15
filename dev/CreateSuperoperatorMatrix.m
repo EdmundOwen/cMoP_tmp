@@ -18,9 +18,9 @@ function mat = CreateSuperoperatorMatrix( L, input, solution )
             [U, D] = eig(full(Lmat0));
             Uinv = eye(M^2) / U;
         
-            solution.U = U;
-            solution.Uinv = Uinv;
-            solution.D = sparse(D);
+            solution.U{input.partitionIndex} = U;
+            solution.Uinv{input.partitionIndex} = Uinv;
+            solution.D{input.partitionIndex} = sparse(D);
         end
         
         mat = LBTSS_Smat(input, solution);

@@ -7,7 +7,7 @@ function result = SaveRho( result, input, i )
     rho = result.rho;
     
     % save this to the history
-    result.hist{i}.rho = rho;
+    result.hist{input.partitionIndex}{i}.rho = rho{input.partitionIndex};
 
 end
 

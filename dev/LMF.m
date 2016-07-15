@@ -18,10 +18,10 @@ function result = LMF( input, mat, solution )
     for i = 1:numel(SE_interactions)
     
         %% extract interaction data
-        interaction_strength = SE_interactions{i}{1};
-        A = SE_interactions{i}{2};
-        B = SE_interactions{i}{3};
-        interaction_type = SE_interactions{i}{5};
+        interaction_strength = SE_interactions{i}.interactionStrength;
+        A = SE_interactions{i}.A;
+        B = SE_interactions{i}.B;
+        interaction_type = SE_interactions{i}.interactionType;
     
         %% calculate the mean field term for this interaction
         switch (interaction_type)
@@ -43,7 +43,7 @@ end  % of function: LMF
 %%% Tr{B * rho} [A, mat]
 function result = comm(B, A, mat, rho)
 
-mean_field = trace(B * rho);
-result = mean_field * (A * mat - mat * A);
+mean_field = trace(B.Operator * rho{B.Index});
+result = mean_field * (A.Operator * mat - mat * A.Operator);
 
 end  % of function: comm

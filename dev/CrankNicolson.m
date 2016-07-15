@@ -14,7 +14,7 @@ function [mat, solution] = CrankNicolson(mat, solution, L, input, dt)
     
     %% iterate the memory functions (if needed)
     if input.memoryNeeded && ~input.isMemory
-        solution = IterateMemory(solution, input, dt);
+        solution = IterateMemory(solution, input, dt, 'crank-nicolson');
     end
     
     %% create the right-hand side matrix of the crank nicolson method

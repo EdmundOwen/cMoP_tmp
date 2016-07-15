@@ -4,9 +4,7 @@
 % mat           - the matrix to iterate
 % solution      - the solution struct containing all memory functions, etc.
 %
-function [new_mat, solution] = PerformTimeStep( mat, solution, L, input, dt )
-
-    method = input.method;
+function [new_mat, solution] = PerformTimeStep( mat, solution, L, input, dt, method )
     
     %% switch between the various possible time-step methods
     switch method

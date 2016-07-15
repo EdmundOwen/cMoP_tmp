@@ -1,11 +1,12 @@
 %%% A function to save the nearest-neighbout correlations on each site.  
 %%% Only called if needed
 
-function result = SaveCorrelation( result, input, i )
+function result = SaveCorrelation( result, input, timestep )
         
     % save the density matrix (for post-simulation analysis rather than
     % calculations)
     rho = result.rho;
+    partitionIndex = input.partitionIndex;
     
     % recover the Hilbert space structure
     onsitedim = input.onsitedim;
@@ -18,10 +19,10 @@ function result = SaveCorrelation( result, input, i )
     g2 = zeros(clustersize-1, 1);
     for j = 1:clustersize-1
         g2op = InsertOperator(kron(a, a'), j, onsitedim, clustersize-1);
-        g2(j) = trace(g2op * rho);
+        g2(j) = trace(g2op * rho{partitionIndex});
     end
 
     % save the data
-    result.hist{i}.g2 = g2;
+    result.hist{partitionIndex}{timestep}.g2 = g2;
     
 end

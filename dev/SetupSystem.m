@@ -17,8 +17,9 @@ function input = SetupSystem(input, varargin)
     p = AddParserOption(p, input, 'V', 0.0, @isnumeric);
     p = AddParserOption(p, input, 'Omega', 0.0, @isnumeric);
     p = AddParserOption(p, input, 'gamma', 0.0, @isnumeric);
-    p = AddParserOption(p, input, 'L', { @L0 }, true);
+    p = AddParserOption(p, input, 'operators', { @L0 }, true);
     p = AddParserOption(p, input, 'dim', 1, @isnumeric);
+    p = AddParserOption(p, input, 'noPartitions', 1, @isnumeric);
     
     %% parse the inputs
     tmp = varargin{:};
@@ -33,6 +34,7 @@ function input = SetupSystem(input, varargin)
     input.gamma = p.Results.gamma;
     input.dim = p.Results.dim;
     input.L = p.Results.operators;
+    input.noPartitions = p.Results.noPartitions;
    
     %% and the system coordination number
     input.coordination = p.Results.coordination;
@@ -41,7 +43,7 @@ function input = SetupSystem(input, varargin)
     input.onsitedim = p.Results.onsitedim;
     input.clustersize = p.Results.clustersize;
     input.M = input.onsitedim ^ input.clustersize;
-       
+    
     %% create the system Hamiltonian
     input.H0 = SetupH0(input);
     
@@ -69,4 +71,8 @@ function input = SetupSystem(input, varargin)
     %% initialise flag, the system is not a memory function so this is always false
     input.isMemory = false;
     
+    %% set up the partitions using this data
+    for i = 1:input.noPartitions
+        input.subinput{i} = SetupPartition(input, i);
+    end
 end

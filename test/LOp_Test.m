@@ -31,8 +31,10 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) L
         %% for L0
         % Check that the operator maintains the size of the density matrix
         function TestL0Size(tc)
-            tc.assertEqual(size(L0(tc.input, tc.rho, tc.solution)), ...
-                           size(tc.rho));
+            for k = 1:tc.input.noPartitions
+                tc.assertEqual(size(L0(tc.input.subinput{k}, tc.rho{k}, tc.solution)), ...
+                               size(tc.rho{k}));
+            end
         end
         % Check that the operator result is Hermitian by operating on the set of 
         % unit vectors density matrices (ie. with zeros everywhere except 
@@ -53,22 +55,26 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) L
         %% for LMF
         % Check that the operator maintains the size of the density matrix
         function TestLMFSize(tc)
-            tc.assertEqual(size(LMF(tc.input, tc.rho, tc.solution)), ...
-                           size(tc.rho));
+            for k = 1:tc.input.noPartitions
+                tc.assertEqual(size(LMF(tc.input.subinput{k}, tc.rho{k}, tc.solution)), ...
+                               size(tc.rho{k}));
+            end
         end
         % Check that the operator result is Hermitian by operating on the set of 
         % unit vectors density matrices (ie. with zeros everywhere except 
         % a single 1 on the diagonal) and checking that the norm is 
         % preserved
         function TestLMFHermitian(tc)
-            for i = 1:tc.input.M
-                rho_unit = zeros(tc.input.M);
-                rho_unit(i, i) = 1.0;
-                tc.solution.rho = rho_unit;
+            for k = 1:tc.input.noPartitions
+                for i = 1:tc.input.subinput{k}.M
+                    rho_unit = zeros(tc.input.subinput{k}.M);
+                    rho_unit(i, i) = 1.0;
+                    tc.solution.rho{k} = rho_unit;
                 
-                result = LMF(tc.input, rho_unit, tc.solution);
-                hermDiff = result' - result;
-                tc.assertLessThan(max(abs(hermDiff(:))), tc.absTol);
+                    result = LMF(tc.input.subinput{k}, rho_unit, tc.solution);
+                    hermDiff = result' - result;
+                    tc.assertLessThan(max(abs(hermDiff(:))), tc.absTol);
+                end
             end
         end
         

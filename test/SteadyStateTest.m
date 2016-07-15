@@ -12,8 +12,8 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
     end
     
     properties (MethodSetupParameter)
-        setup_varargin = {{'gamma', 1.0, 'Omega', 1.0, 'clustersize', 1, 'onsitedim', 2, 'operators', { @L0 } }, ...
-                          {'clustersize', 1, 'onsitedim', 2, 'operators', { @L0, @LMF } }, ...
+        setup_varargin = {{'clustersize', 1, 'onsitedim', 3, 'J', 0.5, 'Delta', 1.5, 'U', 10.0, 'Omega', 0.4, 'gamma', 0.3, 'operators', { @L0, @LMF } }, ...
+                          {'gamma', 1.0, 'Omega', 1.0, 'Delta', 0.0, 'clustersize', 1, 'onsitedim', 2, 'operators', { @L0 } }, ...
                           {'Delta', 0.6, 'J', 1.0, 'gamma', 1.0, 'Omega', 1.5, 'clustersize', 2, 'onsitedim', 2, 'operators', { @L0, @LMF, @LBTSS }}};
         environ_varargin = {{}};
         steady_varargin = {{}};
@@ -38,17 +38,19 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
     methods (Test)
         
         function TestSuperoperatorCreation(tc)
+            for k = 1:tc.input.noPartitions
             %%% create a free evolution superoperator matrix and test it
-            M = tc.input.M;
+            M = tc.input.subinput{k}.M;
             
-            for i = 1:numel(tc.input.L)
-                mat = CreateSuperoperatorMatrix( tc.input.L{i}, tc.input, tc.solution );
+            for i = 1:numel(tc.input.subinput{k}.L)
+                mat = CreateSuperoperatorMatrix( tc.input.subinput{k}.L{i}, tc.input.subinput{k}, tc.solution );
             
                 % check that the matrices have the same size
                 tc.assertEqual(size(mat), [M^2 M^2]);
                 % and check that they do the right thing to rho
-                tc.assertEqual(mat * reshape(tc.rho, [M^2 1]), ...
-                                reshape(tc.input.L{i}(tc.input, tc.rho, tc.solution), [M^2 1]), 'AbsTol', tc.absTol);
+                tc.assertEqual(mat * reshape(tc.rho{k}, [M^2 1]), ...
+                                reshape(tc.input.L{i}(tc.input.subinput{k}, tc.rho{k}, tc.solution), [M^2 1]), 'AbsTol', tc.absTol);
+            end
             end
         end
         
@@ -57,24 +59,27 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
             %%% inputing the corresponding eigenvectors back into the
             %%% superoperators
             
+            for k = 1:tc.input.noPartitions
             % setup
-            M = tc.input.M;
+            M = tc.input.subinput{k}.M;
             
             for i = 1:numel(tc.input.L)
                 % create a superoperator matrix and diagonalize
-                Lmat = CreateSuperoperatorMatrix( tc.input.L{i}, tc.input, tc.solution );
+                Lmat = CreateSuperoperatorMatrix( tc.input.subinput{k}.L{i}, tc.input.subinput{k}, tc.solution );
                 [U, D] = eig(full(Lmat));
                 
                 for j = 1:size(U, 1)
                     % input the jth eigenvector into the operator L
                     eigmat = reshape(U(:, j), [M M]);
-                    result = tc.input.L{i}(tc.input, eigmat, tc.solution);
+                    result = tc.input.subinput{k}.L{i}(tc.input.subinput{k}, eigmat, tc.solution);
                     result = reshape(result, [M^2 1]);
                     
                     % this should be equal to the eigenvector multiplied by
                     % the eigenvalue, ie. L * U = D * U
                     tc.assertEqual(result, D(j, j) * U(:, j), 'AbsTol', tc.absTol);
                 end
+            end
+            
             end
             
         end
@@ -88,27 +93,10 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
                 return
             end
             
-            % it's a qubit...
-            tc.input.onsitedim = 2;
-            
-            % set most of the inputs to zero
-            tc.input.Delta = 0.0;
-            tc.input.U = 0.0;
-            tc.input.J = 0.0;
-            
-            % drive the qubits
-            if tc.input.Omega == 0.0
-                tc.input.Omega = 1.0;
+            % check to see that the inputs are valid
+            if tc.input.onsitedim ~= 2 || tc.input.gamma == 0.0 || tc.input.Delta ~= 0.0
+                return
             end
-            
-            % set the Lindblad weights
-            if tc.input.gamma == 0.0
-                tc.input.gamma = 1.0;
-            end
-            tc.input.Lindblad_weights = tc.input.gamma * eye(numel(tc.input.A_Lindblad));
-            
-            % setup the new Hamiltonian
-            tc.input.H0 = SetupH0(tc.input);
             
             % the expected final density matrix (from steady-state Lindblad
             % equation)
@@ -127,7 +115,9 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
             result = CalculateSteadyState(tc.input, tc.rho, tc.solution);
             
             % test to make sure that the steady state solution is correct
-            tc.assertEqual(full(result), expected, 'AbsTol', tc.absTol);
+            for k = 1:tc.input.noPartitions
+                tc.assertEqual(full(result{k}), expected, 'AbsTol', tc.absTol);
+            end
             
         end
         
@@ -160,7 +150,9 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
             result_ss = CalculateSteadyState(tc.input, tc.rho, tc.solution);
             
             % compare the two results
-            tc.assertEqual(full(result_ss), result_t.rho, 'AbsTol', tc.input.SSError);
+            for k = 1:tc.input.noPartitions
+                tc.assertEqual(full(result_ss{k}), result_t.rho{k}, 'AbsTol', tc.input.SSError);
+            end
             
         end
         
@@ -175,32 +167,28 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
                 return
             end
             
-            % create a set of inputs... note that this should correspond to
+            % check to see that the inputs are valid ... note that this should correspond to
             % a unique solution part of the parameter space (see Fig. 1 of)
             % reference
-            clustersize = 1;
-            onsitedim = 3;     % caution: this needs to be greater than 2 to pass
-            J = 0.5;
-            Delta = 1.5;
-            U = 10.0;
-            Omega = 0.4;
-            gamma = 0.3;
-            
-            % reset the system
-            varargin = {'clustersize', clustersize, ...
-                        'onsitedim', onsitedim, ...
-                        'J', J, ...
-                        'Delta', Delta, ...
-                        'U', U, ...
-                        'Omega', Omega, ...
-                        'gamma', gamma};
-            tc.input = SetupSystem(tc.input, varargin);
-            tc.input = SetupEnvironment(tc.input, {});
-            tc.rho = InitializeRho(tc.input);
+            if tc.input.onsitedim < 3 || tc.input.J == 0.0 ...
+                    || tc.input.Delta == 0.0 || tc.input.Omega == 0.0 ...
+                    || tc.input.gamma == 0.0 || tc.input.U == 0.0
+                return
+            end
             
             % calculate the steady state solution directly using cMoP
             tc.solution.rho = CalculateSteadyState(tc.input, tc.rho, tc.solution);
             
+            for k = 1:tc.input.noPartitions
+                % get values needed to evaluate test
+                onsitedim = tc.input.subinput{k}.onsitedim;
+                clustersize = tc.input.subinput{k}.clustersize;
+                gamma = tc.input.subinput{k}.gamma;
+                U = tc.input.subinput{k}.U;
+                Delta = tc.input.subinput{k}.Delta;
+                J = tc.input.subinput{k}.J;
+                Omega = tc.input.subinput{k}.Omega;
+                
             % check that the values for the mean-field bosonic coherence s
             % and occupations are consistent with the theoretical values
             % for each site
@@ -209,7 +197,7 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
                 a_site = InsertOperator(a_loc, i, onsitedim, clustersize);
 
                 % calculate the mean-field bosonic coherence
-                a_mf = trace(a_site * tc.solution.rho);
+                a_mf = trace(a_site * tc.solution.rho{k});
                 % and input it into the theoretical equation... it should
                 % be zero
                 c = -2.0 * (-1.0 * Delta + 0.5i * gamma) / U;
@@ -233,7 +221,8 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
                             / hypergeom([], [c, c'], 8.0 * abs((F - Jeff * a_mf) / U)^2);
                 % and similarly with the tolerance for the occupation 
                 % expectation value
-                tc.assertEqual(trace(a_site' * a_site * tc.solution.rho), a_occ, 'AbsTol', 10.0 * tc.input.SSError);
+                tc.assertEqual(trace(a_site' * a_site * tc.solution.rho{k}), a_occ, 'AbsTol', 10.0 * tc.input.SSError);
+            end
             end
             
         end
@@ -272,23 +261,26 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
                 % calculate the new steady state
                 result = CalculateSteadyState(tc.input, tc.rho, tc.solution);
             
+                
+            for k = 1:tc.input.noPartitions
                 % calculate the expectation of the annihilation operator 
                 % for the first site
-                a = annihilation(tc.input.onsitedim);
-                for j = 2:tc.input.clustersize
-                    a = kron(a, eye(tc.input.onsitedim));
+                a = annihilation(tc.input.subinput{k}.onsitedim);
+                for j = 2:tc.input.subinput{k}.clustersize
+                    a = kron(a, eye(tc.input.subinput{k}.onsitedim));
                 end
-                a_result = trace(a * result);
+                a_result = trace(a * result{k});
                 
                 % calculate the occupation of the first site
                 n = a' * a;
-                n_result = trace(n * result);
+                n_result = trace(n * result{k});
             
                 % assert that these calculated values must be equal to
                 % those obtained with clusterSS
                 tc.assertEqual(a_result, clusterSS.a(i), 'AbsTol', tc.iterTol);
                 tc.assertEqual(n_result, clusterSS.n(i), 'AbsTol', tc.iterTol);
-                
+            end
+            
             end
             
         end

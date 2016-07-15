@@ -13,7 +13,7 @@ function [mat, solution] = RungeKutta(mat, solution, L, input, dt)
     
     %% iterate the memory functions half a time step (if needed)
     if input.memoryNeeded && ~input.isMemory
-        solution = IterateMemory(solution, input, 0.5 * dt);
+        solution = IterateMemory(solution, input, 0.5 * dt, 'runge-kutta');
     end
     
     %% calculate the rhs at the midpoint using k1
@@ -27,7 +27,7 @@ function [mat, solution] = RungeKutta(mat, solution, L, input, dt)
 
     %% iterate the memory functions for the rest of the time step (if needed)
     if input.memoryNeeded && ~input.isMemory
-        solution = IterateMemory(solution, input, 0.5 * dt);
+        solution = IterateMemory(solution, input, 0.5 * dt, 'runge-kutta');
     end
     
     %% calculate the rhs at the end of the interval

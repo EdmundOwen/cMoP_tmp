@@ -5,17 +5,12 @@ function input = SetupTimeIter(input, varargin)
 
     %% define default input values
     p = inputParser;
-    defaultdt = GetFromInput(input, 'dt', 0.001);
-    defaultNt = GetFromInput(input, 'Nt', 1000);
-    defaultMethod = GetFromInput(input, 'method', 'heun');
-    defaultNTest = GetFromInput(input, 'NTest', 1);
-    defaultProbes = GetFromInput(input, 'probes', {});
     
-    addOptional(p, 'dt', defaultdt, @isnumeric);
-    addOptional(p, 'Nt', defaultNt, @isnumeric);
-    addOptional(p, 'method', defaultMethod);
-    addOptional(p, 'NTest', defaultNTest, @isnumeric);
-    addOptional(p, 'probes', defaultProbes);
+    p = AddParserOption(p, input, 'dt', 0.001, @isnumeric);
+    p = AddParserOption(p, input, 'Nt', 1000, @isnumeric);
+    p = AddParserOption(p, input, 'method', 'heun', true);
+    p = AddParserOption(p, input, 'NTest', 1, @isnumeric);
+    p = AddParserOption(p, input, 'probes', {}, true);
     
     %% parse the inputs
     tmp = varargin{:};
@@ -36,4 +31,8 @@ function input = SetupTimeIter(input, varargin)
         input.NTest = 1;
     end
     
+    %% copy the time interval to the subinputs for each partition
+    for k = 1:input.noPartitions
+        input.subinput{k}.dt = input.dt;
+    end
 end

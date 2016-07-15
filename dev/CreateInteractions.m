@@ -30,8 +30,13 @@ function interactions = CreateInteractions( input, interaction_list )
         B_operator = InsertOperator(B_site_operator, B_site_label, onsitedim, clustersize);
         
         % input into interactions struct
-        interactions{i} = {interaction_list{i}{1}, A_operator, B_operator, ...
-                                interaction_list{i}{6}, interaction_type};
+        interactions{i}.interactionStrength = interaction_list{i}{1};
+        interactions{i}.A.Operator = A_operator;
+        interactions{i}.B.Operator = B_operator;
+        interactions{i}.Correlations = interaction_list{i}{6};
+        interactions{i}.interactionType = interaction_type;
+%         interactions{i} = {interaction_list{i}{1}, A_operator, B_operator, ...
+%                                 interaction_list{i}{6}, interaction_type};
     end
 
 end

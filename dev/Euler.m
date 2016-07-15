@@ -10,7 +10,7 @@ function [mat, solution] = Euler(mat, solution, L, input, dt)
   
     %% iterate the memory functions (if needed)
     if input.memoryNeeded && ~input.isMemory
-        solution = IterateMemory(solution, input, dt);
+        solution = IterateMemory(solution, input, dt, 'euler');
     end
   
     %% iterate the matrix

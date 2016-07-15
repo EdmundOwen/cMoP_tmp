@@ -4,6 +4,7 @@ function result = LBTSS( input, mat, solution )
 
     %% extract the interactions and other data from the input
     M = input.M;
+    partitionIndex = input.partitionIndex;
         
     %% create the free evolution superoperator matrix and calculate its
     % eigenvalues and eigenvectors if not already done
@@ -12,9 +13,9 @@ function result = LBTSS( input, mat, solution )
         [U, D] = eig(full(Lmat0));
         Uinv = eye(M^2) / U;
        
-        solution.U = U;
-        solution.Uinv = Uinv;
-        solution.D = sparse(D);
+        solution.U{partitionIndex} = U;
+        solution.Uinv{partitionIndex} = Uinv;
+        solution.D{partitionIndex} = sparse(D);
     end
     
     %% get the superoperator matrix

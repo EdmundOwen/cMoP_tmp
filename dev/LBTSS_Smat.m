@@ -6,6 +6,7 @@ function result = LBTSS_Smat( input, solution )
     %% extract the interactions and other data from the input
     M = input.M;
     interactions = input.interactions;
+    partitionIndex = input.partitionIndex;
     rho = solution.rho;
     
     %% create prototypes for the superoperator matrix product functions
@@ -17,13 +18,13 @@ function result = LBTSS_Smat( input, solution )
     %% precalculate the projector matrices Ma and Mb
     Mmat = cell(M^2, 1);
     for a = 1:M^2
-        Mmat{a} = solution.U * sparse(a, a, 1.0, M^2, M^2) * solution.Uinv;
+        Mmat{a} = solution.U{partitionIndex} * sparse(a, a, 1.0, M^2, M^2) * solution.Uinv{partitionIndex};
     end
     %% and reciprocals of the eigenvalues
     Dinv = zeros(M^2);
     for a = 1:M^2
         for b = 1:M^2
-            Dinv(a, b) = 1.0 / (solution.D(a, a) + solution.D(b, b));
+            Dinv(a, b) = 1.0 / (solution.D{partitionIndex}(a, a) + solution.D{partitionIndex}(b, b));
         end
     end
     
@@ -33,21 +34,21 @@ function result = LBTSS_Smat( input, solution )
     for k = 1:numel(interactions)
         for l = 1:numel(interactions)
             
-            if ~interactions{k}{4}(l)
+            if ~interactions{k}.Correlations(l)
                 continue
             end
             
             %% get the relevant system operators
-            J2 = interactions{k}{1} * interactions{l}{1};
-            Ak = interactions{k}{2};
-            Bk = interactions{k}{3};
-            Al = interactions{l}{2};
-            Bl = interactions{l}{3};
+            J2 = interactions{k}.interactionStrength * interactions{l}.interactionStrength;
+            Ak = interactions{k}.A;
+            Bk = interactions{k}.B;
+            Al = interactions{l}.A;
+            Bl = interactions{l}.B;
         
             % calculate fluctuations using the previous iteration
             % density matrix in the traces
-            dAk = Ak - trace(Ak * rho) * speye(size(Ak));
-            dBk = Bk - trace(Bk * rho) * speye(size(Bk));
+            dAk = Ak.Operator - trace(Ak.Operator * rho{partitionIndex}) * speye(size(Ak.Operator));
+            dBk = Bk.Operator - trace(Bk.Operator * rho{Bk.Index}) * speye(size(Bk.Operator));
             
             % precalculate the left and right matrix multiplications of dAk
             dAk_left = matprod(dAk, protoleft);
@@ -61,15 +62,15 @@ function result = LBTSS_Smat( input, solution )
                 Ma = Mmat{a};
                 for b = 1:M^2
                     % skip if a or b are zero
-                    if abs(solution.D(a, a)) < 1e-10 || abs(solution.D(b, b)) < 1e-10
+                    if abs(solution.D{partitionIndex}(a, a)) < 1e-10 || abs(solution.D{partitionIndex}(b, b)) < 1e-10
                         continue;
                     end
                     % calculate Mb free evolution
                     Mb = Mmat{b};
                     
                     % calculate the memory kernel integrand weights
-                    d = trace(Bl * reshape(Mb * reshape(dBk * rho, [M^2 1]), [M M]));
-                    s = trace(Bl * reshape(Mb * reshape(rho * dBk, [M^2 1]), [M M]));
+                    d = trace(Bl.Operator * reshape(Mb * reshape(dBk * rho{Bk.Index}, [M^2 1]), [M M]));
+                    s = trace(Bl.Operator * reshape(Mb * reshape(rho{Bk.Index} * dBk, [M^2 1]), [M M]));
                     
                     % calculate the commutator between the steady state 
                     % system density matrix and the fluctuations dAk
@@ -84,7 +85,7 @@ function result = LBTSS_Smat( input, solution )
             end
             
             %% and evaluate the commutator for this set of interactions
-            LBTSS = LBTSS - J2 * (matprod(Al, protoleft) * rhs - matprod(Al, protoright) * rhs);
+            LBTSS = LBTSS - J2 * (matprod(Al.Operator, protoleft) * rhs - matprod(Al.Operator, protoright) * rhs);
             
         end
     end

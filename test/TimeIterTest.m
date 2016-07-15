@@ -10,7 +10,10 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) T
     end
     
     properties (MethodSetupParameter)
-        setup_varargin = {{'clustersize', 1, 'onsitedim', 2, 'operators', { @L0 }}};
+        setup_varargin = {{'clustersize', 1, 'onsitedim', 2, 'operators', { @L0 }}, ...
+                          {'clustersize', 1, 'onsitedim', 2, 'operators', { @L0 }, 'J', 0.0, 'Omega', 1.0, 'gamma', 0.0, 'Delta', 0.0}, ...
+                          {'clustersize', 2, 'onsitedim', 2, 'operators', { @L0 }, 'J', 1.0, 'Omega', 0.0, 'gamma', 0.0, 'Delta', 0.0}, ...
+                          {'clustersize', 2, 'onsitedim', 2, 'operators', { @L0 }, 'J', 0.0, 'Omega', 0.4, 'gamma', 1.5, 'Delta', 0.0}};
         timeiter_varargin = {{ 'method', 'euler' },...
                              {'method', 'crank-nicolson'},...
                              {'method', 'runge-kutta'},...
@@ -31,59 +34,63 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) T
     methods (Test)
         
         function TestNoIter(tc)
+            
             % test that function doesn't change the density matrix when Nt = 0
             tc.input.Nt = 0;
             results = TimeIter(tc.input, tc.rho);
-           
-           	diff = tc.rho - results.rho;
-            tc.assertEqual(max(abs(diff(:))), 0.0, 'AbsTol', tc.absTol);
+            
+            for k = 1:tc.input.noPartitions
+               	diff = tc.rho{k} - results.rho{k};
+                tc.assertEqual(max(abs(diff(:))), 0.0, 'AbsTol', tc.absTol);
+            end
         end
         function TestIdentHamiltonian(tc)
         	% test that the density matrix doesn't change if the
             % Hamiltonian is set to the identity and all the Lindblad
             % weights are set to zero
-            tc.input.H0 = speye(size(tc.input.H0));
-            tc.input.Lindblad_weights = zeros(size(tc.input.Lindblad_weights));
+            for k = 1:tc.input.noPartitions
+                tc.input.subinput{k}.H0 = speye(size(tc.input.subinput{k}.H0));
+                tc.input.subinput{k}.Lindblad_weights = zeros(size(tc.input.subinput{k}.Lindblad_weights));
+            end
+            
             results = TimeIter(tc.input, tc.rho);
             
-            diff = tc.rho - results.rho;
-            tc.assertEqual(max(abs(diff(:))), 0.0, 'AbsTol', tc.absTol);
+            for k = 1:tc.input.noPartitions
+                diff = tc.rho{k} - results.rho{k};
+                tc.assertEqual(max(abs(diff(:))), 0.0, 'AbsTol', tc.absTol);
+            end
         end
         
         function TestSimpleQubit(tc)
             % test a simple two-state, pure state driven evolution for a single
             % half-period of the expected oscillation
-            tc.input.onsitedim = 2;
             
-            % set most of the inputs to zero
-            tc.input.Delta = 0.0;
-            tc.input.J = 0.0;
-            tc.input.U = 0.0;
-            tc.input.Lindblad_weights = zeros(size(tc.input.Lindblad_weights));
-            
-            % drive the qubit (if it's not already)
-            if tc.input.Omega == 0.0
-                tc.input.Omega = 1.0;
+            % check to see that the inputs are valid
+            if tc.input.onsitedim ~= 2 || tc.input.J ~= 0.0 ...
+                    || tc.input.gamma ~= 0.0 || tc.input.Delta ~= 0.0 || tc.input.Omega == 0.0
+                return
             end
             
-            % setup the new Hamiltonian
-            tc.input.H0 = SetupH0(tc.input);
-            tc.input.Nt = round(pi / (tc.input.Omega * tc.input.dt));
-            
             % start the qubit in the zero state
-            tc.rho = 1;  expected = 1;
-            rho_zero = [1, 0; 0, 0];
-            rho_one = [0, 0; 0, 1];
-            for i = 1:tc.input.clustersize
-                tc.rho = kron(tc.rho, rho_zero);
-                expected = kron(expected, rho_one);
+            expected = cell(1,tc.input.noPartitions);
+            for k = 1:tc.input.noPartitions
+                tc.rho{k} = 1;  expected{k} = 1;
+                rho_zero = [1, 0; 0, 0];
+                rho_one = [0, 0; 0, 1];
+                for i = 1:tc.input.subinput{k}.clustersize
+                    tc.rho{k} = kron(tc.rho{k}, rho_zero);
+                    expected{k} = kron(expected{k}, rho_one);
+                end
             end
             
             % iterate
+            tc.input.Nt = round(pi / (tc.input.Omega * tc.input.dt));
             results = TimeIter(tc.input, tc.rho);
             
-            % check that the qubit is in the one state
-            tc.assertEqual(results.rho, expected, 'AbsTol', tc.iterTol);
+            for k = 1:tc.input.noPartitions
+                % check that the qubit is in the one state
+                tc.assertEqual(results.rho{k}, expected{k}, 'AbsTol', tc.iterTol);
+            end
         end
         
         function TestCoupledQubit(tc)
@@ -94,96 +101,89 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) T
             tc.input.onsitedim = 2;
             tc.input.clustersize = 2;
             
-            % set most of the inputs to zero
-            tc.input.Delta = 0.0;
-            tc.input.U = 0.0;
-            tc.input.Omega = 0.0;
-            tc.input.Lindblad_weights = zeros(size(tc.input.Lindblad_weights));
-            
-            % couple the qubits
-            if tc.input.J == 0.0
-                tc.input.J = 1.0;
+            % check to see that the inputs are valid
+            if tc.input.onsitedim ~= 2 || tc.input.clustersize ~= 2 || tc.input.J == 0.0 ...
+                    || tc.input.gamma ~= 0.0 || tc.input.Delta ~= 0.0 || tc.input.Omega ~= 0.0
+                return
             end
-            
-            % setup the new Hamiltonian
-            tc.input.H0 = SetupH0(tc.input);
-            tc.input.Nt = round(pi / (4.0 * tc.input.J * tc.input.dt));
             
             % start the qubit in the zero state
             rho_zero = [1, 0; 0, 0];
             rho_one = [0, 0; 0, 1];
             
-            tc.rho = kron(rho_one, rho_zero);
+            for k = 1:tc.input.noPartitions
+                tc.rho{k} = kron(rho_one, rho_zero);
+            end
             expected = [0,     0,    0,  0;
                         0,   0.5, 0.5i,  0;
                         0, -0.5i,  0.5,  0;
                         0,     0,    0,  0];
             
             % iterate
+            tc.input.Nt = round(pi / (4.0 * tc.input.J * tc.input.dt));
             results = TimeIter(tc.input, tc.rho);
             
-            % check that the qubits are in a maximally entangled state
-            tc.assertEqual(results.rho, expected, 'AbsTol', tc.iterTol);
+            for k = 1:tc.input.noPartitions
+                % check that the qubits are in a maximally entangled state
+                tc.assertEqual(results.rho{k}, expected, 'AbsTol', tc.iterTol);
+            end
         end
         
         function TestDampedQubit(tc)
             % test a highly damped qubit to make sure the Lindblad
             % operators are working
-            tc.input.onsitedim = 2;
             
-            % set most of the inputs to zero
-            tc.input.Delta = 0.0;
-            tc.input.U = 0.0;
-            tc.input.J = 0.0;
-            
-            % drive the qubits
-            if tc.input.Omega == 0.0
-                tc.input.Omega = 1.0;
+            % check to see that the inputs are valid
+            if tc.input.onsitedim ~= 2 || tc.input.J ~= 0.0 || tc.input.Delta ~= 0.0 || tc.input.gamma == 0.0
+                return
             end
-            
-            % set the Lindblad weights
-            if tc.input.gamma == 0.0
-                tc.input.gamma = 1.0;
-            end
-            tc.input.Lindblad_weights = tc.input.gamma * eye(numel(tc.input.A_Lindblad));
-            
-            % setup the new Hamiltonian
-            tc.input.H0 = SetupH0(tc.input);
-            tc.input.Nt = round(10.0 / (tc.input.gamma * tc.input.dt));
             
             % the expected final density matrix (from steady-state Lindblad
             % equation)
-            expected = 1;
+            expected = num2cell(ones(1, tc.input.noPartitions));
             rho00 = (tc.input.gamma^2 + tc.input.Omega^2) / (tc.input.gamma^2 + 2.0 * tc.input.Omega^2);
             rho11 = 1.0 - rho00;
             rho01 = -1.0i * tc.input.Omega / tc.input.gamma * (1.0 - 2.0 * rho00);
             rho10 = -1.0 * rho01;
             
             mixed = [rho00, rho01; rho10, rho11];
-            for i = 1:tc.input.clustersize
-                expected = kron(expected, mixed);
+            for k = 1:tc.input.noPartitions
+                for i = 1:tc.input.clustersize                
+                    expected{k} = kron(expected{k}, mixed);
+                end
             end
             
             % iterate
+            tc.input.Nt = round(20.0 / (tc.input.gamma * tc.input.dt));
             results = TimeIter(tc.input, tc.rho);
             
             % check that the qubits are all close to a maximally mixed
             % state
-            tc.assertEqual(results.rho, expected, 'AbsTol', tc.iterTol);
+            for k = 1:tc.input.noPartitions
+                tc.assertEqual(results.rho{k}, expected{k}, 'AbsTol', tc.iterTol);
+            end
         end
         
         % test to make sure that if the Hamiltonian changes, the time
         % evolution changes too
         function TestChangeH0(tc)
-            % replace the Hamiltonian with the identity
-            newH0 = speye(tc.input.M);
-            tc.input.H0 = newH0;
+            for k = 1:tc.input.noPartitions
+                % replace the Hamiltonian with the identity
+                newH0 = speye(tc.input.subinput{k}.M);
+                tc.input.subinput{k}.H0 = newH0;
+                
+                % and remove all Lindblad coefficients
+                newLindbladWeights = zeros(size(tc.input.subinput{k}.Lindblad_weights));
+                tc.input.subinput{k}.Lindblad_weights = newLindbladWeights;
+            end
             
             % evolve using the identity
             results = TimeIter(tc.input, tc.rho);
             
-            % check that the density matrix hasn't changed
-            tc.assertEqual(abs(results.rho), abs(tc.rho), 'AbsTol', tc.iterTol);
+            for k = 1:tc.input.noPartitions
+                % check that the density matrix hasn't changed
+                tc.assertEqual(abs(results.rho{k}), abs(tc.rho{k}), 'AbsTol', tc.iterTol);
+            end
         end
     end
     

@@ -5,11 +5,9 @@ function input = SetupSteadyState(input, varargin)
 
     %% define default input values
     p = inputParser;
-    defaultNiter = GetFromInput(input, 'Niter', 100);
-    defaultSSError = GetFromInput(input, 'SSError', 1e-5);
     
-    addOptional(p, 'Niter', defaultNiter, @isnumeric);
-    addOptional(p, 'SSError', defaultSSError, @isnumeric);
+    p = AddParserOption(p, input, 'Niter', 100, @isnumeric);
+    p = AddParserOption(p, input, 'SSError', 1e-5, @isnumeric);
     
     %% parse the inputs
     tmp = varargin{:};

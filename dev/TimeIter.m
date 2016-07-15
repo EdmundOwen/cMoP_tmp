@@ -23,13 +23,17 @@ function result = TimeIter(input, rho)
         result.rho = new_rho;
         if mod(i, input.NTest) == 0
             for j = 1:numel(input.probelist)
-                % save results from the old time step 
-                result = input.probelist{j}(result, input, i);
+                for k = 1:input.noPartitions
+                    % save results from the old time step 
+                    result = input.probelist{j}(result, input.subinput{k}, i);
+                end
             end
         end
         
         % iterate the density matrix and memory functions
-        [new_rho, result] = PerformTimeStep(result.rho, result, L, input, dt);
+        for k = 1:input.noPartitions
+            [new_rho{k}, result] = PerformTimeStep(result.rho{k}, result, L, input.subinput{k}, dt, input.method);
+        end
         
     end
     

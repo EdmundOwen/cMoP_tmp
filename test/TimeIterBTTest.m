@@ -11,7 +11,8 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) T
     end
     
     properties (MethodSetupParameter)
-        setup_varargin = {{'clustersize', 1, 'onsitedim', 2, 'operators', { @L0, @LMF, @LBT } }};
+        setup_varargin = {{'clustersize', 1, 'onsitedim', 2, 'operators', { @L0, @LMF, @LBT } }, ...
+                          {'clustersize', 4, 'onsitedim', 2, 'operators', { @L0, @LMF, @LBT }, 'Omega', 0.0, 'gamma', 0.0, 'J', 1.0, 'Delta', 0.0 }};
         environ_varargin = {{}};
         timeiter_varargin = {{'method', 'euler' },...
                              {'method', 'runge-kutta'},...
@@ -41,39 +42,23 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) T
             % density
             tc.input.probelist{end+1} = @SaveRho;
             
-            % setup the system as a unitary, undriven evolution of a spin
+            % check to see that the inputs are valid ..
+            % the system is a unitary, undriven evolution of a spin
             % chain
-            onsitedim = 2;
-            Omega = 0.0;
-            gamma = 0.0;
-            U = 0.0;
+            if tc.input.onsitedim ~= 2 || mod(tc.input.clustersize, 2) ~= 0 || tc.input.J == 0.0 ...
+                    || tc.input.gamma ~= 0.0 || tc.input.Omega ~= 0.0
+                return
+            end
             
-            % create a set of inputs
-            clustersize = 4;
-            J = 1.0;
-            Delta = 0.0;
-            
-            % check that the cluster size is even, which it must be for the
-            % input state to have the form |010101...>
-            tc.assertEqual(mod(clustersize, 2), 0);
-            
-            % reset the system
-            varargin = {'clustersize', clustersize, ...
-                        'onsitedim', onsitedim, ...
-                        'J', J, ...
-                        'Delta', Delta, ...
-                        'U', U, ...
-                        'Omega', Omega, ...
-                        'gamma', gamma};
-            tc.input = SetupSystem(tc.input, varargin);
-            tc.input = SetupEnvironment(tc.input, {});
-            twosite_rho = kron([0.0, 0.0; 0.0, 1.0], ...
-                          [1.0, 0.0; 0.0, 0.0]);
             % tensor product the two site density matrix to create the
             % system density matrix
-            tc.rho = twosite_rho;
-            for i = 1:(clustersize / 2) - 1
-                tc.rho = kron(tc.rho, twosite_rho);
+            twosite_rho = kron([0.0, 0.0; 0.0, 1.0], ...
+                          [1.0, 0.0; 0.0, 0.0]);
+            for k = 1:tc.input.noPartitions
+                tc.rho{k} = twosite_rho;
+                for i = 1:(tc.input.subinput{k}.clustersize / 2) - 1
+                    tc.rho{k} = kron(tc.rho{k}, twosite_rho);
+                end
             end
             
             % do the iteration
@@ -84,17 +69,19 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) T
             % test against the analytic solution by Flesch et al.
             % http://dx.doi.org/10.1103/PhysRevA.78.033608
             % Eq 15, f_{i,j}, i=j, i even
-            exactocc = @(t) 0.5 + 0.5 * besselj(0, 4.0 * J * t);
+            exactocc = @(t) 0.5 + 0.5 * besselj(0, 4.0 * tc.input.J * t);
             
-            % calculate the occupation of the first site
-            a_loc = annihilation(onsitedim);
-            n1 = InsertOperator(a_loc' * a_loc, 1, onsitedim, clustersize);
-            for i = 1:tc.input.Nt
-                occ(i, 1) = abs(trace(n1 * result.hist{i}.rho));
-                occ(i, 2) = exactocc(i * tc.input.dt);
+            for k = 1:tc.input.noPartitions
+                % calculate the occupation of the first site
+                a_loc = annihilation(2);
+                n1 = InsertOperator(a_loc' * a_loc, 1, 2, tc.input.subinput{k}.clustersize);
+                for i = 1:tc.input.Nt
+                    occ(i, 1) = abs(trace(n1 * result.hist{k}{i}.rho));
+                    occ(i, 2) = exactocc(i * tc.input.dt);
+                end
+            
+                tc.assertEqual(occ(i, 1), occ(i, 2), 'AbsTol', tc.iterTol);
             end
-            
-            tc.assertEqual(occ(i, 1), occ(i, 2), 'AbsTol', tc.iterTol);
         end
         
     end

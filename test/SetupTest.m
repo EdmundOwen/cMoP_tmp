@@ -27,50 +27,68 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
         
         % test the density matrix setup
         function TestDimension(tc)
-            tc.assertEqual(ndims(tc.rho), 2);
+            for k = 1:tc.input.noPartitions
+                tc.assertEqual(ndims(tc.rho{k}), 2);
+            end
         end
         function TestTrace(tc)
-            tc.assertEqual(trace(tc.rho), 1.0, 'AbsTol', tc.absTol);
+            for k = 1:tc.input.noPartitions
+                tc.assertEqual(trace(tc.rho{k}), 1.0, 'AbsTol', tc.absTol);
+            end
         end
         function TestHermitian(tc)
-            hermDiff = (tc.rho - tc.rho');
-            tc.assertLessThan(max(abs(hermDiff(:))), tc.absTol);
+            for k = 1:tc.input.noPartitions
+                hermDiff = (tc.rho{k} - tc.rho{k}');
+                tc.assertLessThan(max(abs(hermDiff(:))), tc.absTol);
+            end
         end
         
         % test the system parameter setup
         function TestH0Dim(tc)
-            % test to make sure that the system Hamiltonian has the same
-            % dimension as the density matrix
-            tc.assertEqual(size(tc.rho), size(tc.input.H0));
+            for k = 1:tc.input.noPartitions
+                % test to make sure that the system Hamiltonian has the same
+                % dimension as the density matrix
+                tc.assertEqual(size(tc.rho{k}), size(tc.input.subinput{k}.H0));
+            end
         end
         function TestH0Hermitian(tc)
-            % test to make sure that the system Hamiltonian is hermitian
-            result = tc.input.H0' - tc.input.H0;
-            tc.assertLessThan(max(abs(result(:))), tc.absTol);
+            for k = 1:tc.input.noPartitions
+                % test to make sure that the system Hamiltonian is hermitian
+                result = tc.input.subinput{k}.H0' - tc.input.subinput{k}.H0;
+                tc.assertLessThan(max(abs(result(:))), tc.absTol);
+            end
         end
         function TestLindbladNum(tc)
-            % there should not be more than M^2-1 Lindblad operators
-            % otherwise one of the operators is a linear combination of the
-            % others and time is wasted
-            tc.assertLessThanOrEqual(numel(tc.input.A_Lindblad), tc.input.M^2-1);
+            for k = 1:tc.input.noPartitions
+                % there should not be more than M^2-1 Lindblad operators
+                % otherwise one of the operators is a linear combination of the
+                % others and time is wasted
+                tc.assertLessThanOrEqual(numel(tc.input.subinput{k}.A_Lindblad), tc.input.subinput{k}.M^2-1);
+            end
         end
         function TestLindbladDim(tc)
-            % test to make sure that all of the Lindblad operators have the
-            % same dimension as the density matrix
-            for i = 1:numel(tc.input.A_Lindblad)
-                tc.assertEqual(size(tc.rho), size(tc.input.A_Lindblad{i}));
+            for k = 1:tc.input.noPartitions
+                % test to make sure that all of the Lindblad operators have the
+                % same dimension as the density matrix
+                for i = 1:numel(tc.input.A_Lindblad)
+                    tc.assertEqual(size(tc.rho{k}), size(tc.input.subinput{k}.A_Lindblad{i}));
+                end
             end
         end
         function TestLindbladTrace(tc)
-            % Lindblad operators should be traceless
-            for i = 1:numel(tc.input.A_Lindblad)
-                tc.assertEqual(trace(tc.input.A_Lindblad{i}), 0.0, 'AbsTol', tc.absTol);
+            for k = 1:tc.input.noPartitions
+                % Lindblad operators should be traceless
+                for i = 1:numel(tc.input.subinput{k}.A_Lindblad)
+                    tc.assertEqual(trace(tc.input.subinput{k}.A_Lindblad{i}), 0.0, 'AbsTol', tc.absTol);
+                end
             end
         end
         function TestLindbladWeights(tc)
-            % the Lindblad operator weights (damping factors) should be
-            % greater than or equal to zero
-            tc.assertGreaterThanOrEqual(tc.input.Lindblad_weights, 0.0);
+            for k = 1:tc.input.noPartitions
+                % the diagonalised Lindblad operator weights (damping 
+                % factors) should be greater than or equal to zero
+                tc.assertGreaterThanOrEqual(eig(tc.input.subinput{k}.Lindblad_weights), 0.0);
+            end
         end
         
         % test parameter loading from file

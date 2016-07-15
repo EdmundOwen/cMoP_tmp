@@ -1,10 +1,11 @@
 %%% A function to save the density on each site.  Only called if needed
 
-function result = SaveDensity( result, input, i )
+function result = SaveDensity( result, input, timestep )
         
     % save the density matrix (for post-simulation analysis rather than
     % calculations)
     rho = result.rho;
+    partitionIndex = input.partitionIndex;
     
     % recover the Hilbert space structure
     onsitedim = input.onsitedim;
@@ -17,9 +18,9 @@ function result = SaveDensity( result, input, i )
     n = zeros(clustersize, 1);
     for j = 1:clustersize
         nop = InsertOperator(a' * a, j, onsitedim, clustersize);
-        n(j) = abs(trace(nop * rho));
+        n(j) = abs(trace(nop * rho{partitionIndex}));
     end
 
     % save the density data
-    result.hist{i}.n = n;
+    result.hist{partitionIndex}{timestep}.n = n;
 end
