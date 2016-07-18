@@ -17,7 +17,7 @@ function input = SetupSystem(input, varargin)
     p = AddParserOption(p, input, 'V', 0.0, @isnumeric);
     p = AddParserOption(p, input, 'Omega', 0.0, @isnumeric);
     p = AddParserOption(p, input, 'gamma', 0.0, @isnumeric);
-    p = AddParserOption(p, input, 'operators', { @L0 }, true);
+    p = AddParserOption(p, input, 'L', { @L0 }, true);
     p = AddParserOption(p, input, 'dim', 1, @isnumeric);
     p = AddParserOption(p, input, 'noPartitions', 1, @isnumeric);
     
@@ -33,7 +33,7 @@ function input = SetupSystem(input, varargin)
     input.Omega = p.Results.Omega;
     input.gamma = p.Results.gamma;
     input.dim = p.Results.dim;
-    input.L = p.Results.operators;
+    input.L = p.Results.L;
     input.noPartitions = p.Results.noPartitions;
    
     %% and the system coordination number
