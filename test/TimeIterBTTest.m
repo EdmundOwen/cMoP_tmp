@@ -14,9 +14,9 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) T
         setup_varargin = {{'clustersize', 1, 'onsitedim', 2, 'L', { @L0, @LMF, @LBT } }, ...
                           {'clustersize', 2, 'onsitedim', 2, 'L', { @L0, @LMF, @LBT }, 'Omega', 0.0, 'gamma', 0.0, 'J', 1.0, 'Delta', 0.0 }};
         environ_varargin = {{}};
-        timeiter_varargin = {{'method', 'euler' },...
-                             {'method', 'runge-kutta'},...
-                             {'method', 'heun'}};
+        timeiter_varargin = {{'method', 'euler', 'dt', 0.005 },...
+                             {'method', 'runge-kutta', 'dt', 0.005},...
+                             {'method', 'heun', 'dt', 0.005}};
     end
 
     methods (TestMethodSetup)
@@ -62,7 +62,6 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) T
             end
             
             % do the iteration
-            tc.input.dt = 0.005;
             tc.input.Nt = 30;
             result = TimeIter(tc.input, tc.rho);
             
