@@ -31,7 +31,7 @@ OmegaEnd = delta;
 %% setup the inputs
 input.exists = true;
 input = SetupSystem(input, {'clustersize', clustersize, 'onsitedim', onsitedim, ...
-                            'gamma', gamma, 'operators', { @L0 }});%, @LMF}});%, @LBTSS }});
+                            'gamma', gamma, 'L', { @L0 }});%, @LMF}});%, @LBTSS }});
 input = SetupEnvironment(input, {});
 input = SetupSteadyState(input, {});
 
@@ -136,7 +136,7 @@ input.subinput{1}.interactions = interactions;
 % g2val = trace(g2 * result) / nval^2
 
 %% time iterate the original density matrix
-time_varargin = {'Nt', 1000, 'dt', 0.01, 'probes', { @SaveDensity, @SaveCorrelation }};
+time_varargin = {'Nt', 1000, 'dt', 0.01, 'probelist', { @SaveDensity, @SaveCorrelation }};
 input = SetupTimeIter(input, time_varargin);
 results = TimeIter(input, rho);
 

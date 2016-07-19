@@ -28,14 +28,14 @@ varargin = {'clustersize', clustersize, ...
             'U', U, ...
             'Omega', Omega, ...
             'gamma', gamma, ...
-            'operators', { @L0, @LMF } };
+            'L', { @L0, @LMF } };
         
 absTol = 1e-7;
 iterTol = 1e-3;     % tolerance for iterations
 input.exists = true;
 input = SetupSystem(input, varargin);
 input = SetupEnvironment(input, {});
-input = SetupTimeIter(input, {'probes', { @SaveDensity }});
+input = SetupTimeIter(input, {'probelist', { @SaveDensity }});
 rho = InitializeRho(input);
  rho{1}(1,1)=0;
  rho{1}(3,3)=1;
