@@ -21,7 +21,7 @@ function result = LMF( input, mat, solution )
         interaction_strength = SE_interactions{i}.interactionStrength;
         A = SE_interactions{i}.A;
         B = SE_interactions{i}.B;
-        interaction_type = SE_interactions{i}.interactionType;
+        interaction_type = GetFromInput(SE_interactions, 'interactionType', 'unitary');
     
         %% calculate the mean field term for this interaction
         switch (interaction_type)

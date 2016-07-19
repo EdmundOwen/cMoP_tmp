@@ -10,7 +10,7 @@ function input = SetupTimeIter(input, varargin)
     p = AddParserOption(p, input, 'Nt', 1000, @isnumeric);
     p = AddParserOption(p, input, 'method', 'heun', true);
     p = AddParserOption(p, input, 'NTest', 1, @isnumeric);
-    p = AddParserOption(p, input, 'probes', {}, true);
+    p = AddParserOption(p, input, 'probelist', {}, true);
     
     %% parse the inputs
     tmp = varargin{:};
@@ -21,7 +21,7 @@ function input = SetupTimeIter(input, varargin)
     input.Nt = p.Results.Nt;
     input.method = p.Results.method;
     input.NTest = p.Results.NTest;
-    input.probelist = p.Results.probes;
+    input.probelist = p.Results.probelist;
     
     %% add optional operators to probe
     
