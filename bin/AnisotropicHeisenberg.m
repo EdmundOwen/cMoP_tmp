@@ -86,22 +86,22 @@ for  i = 1:3
     % for interactions in the x direction
     for j = 1:clustersizey
         % to the left
-        int_list{count} = {J(i), (j-1)*clustersizex + 1, sigma{i}, ...
+        int_list{count} = {0.5 * J(i), (j-1)*clustersizex + 1, sigma{i}, ...
                             j*clustersizex, sigma{i}, correlation(count, :)};
         count = count + 1;
         % to the right
-        int_list{count} = {J(i), j*clustersizex, sigma{i}, ...
+        int_list{count} = {0.5 * J(i), j*clustersizex, sigma{i}, ...
                             (j-1)*clustersizex + 1, sigma{i}, correlation(count, :)};
         count = count + 1;
     end
     % and for interactions in the y direction
     for j = 1:clustersizex
         % up
-        int_list{count} = {J(i), j, sigma{i}, ...
+        int_list{count} = {0.5 * J(i), j, sigma{i}, ...
                             (clustersize-clustersizex) + j, sigma{i}, correlation(count, :)};
         count = count + 1;
         % down
-        int_list{count} = {J(i), (clustersize-clustersizex) + j, sigma{i}, ...
+        int_list{count} = {0.5 * J(i), (clustersize-clustersizex) + j, sigma{i}, ...
                             j, sigma{i}, correlation(count, :)};
         count = count + 1;
     end
