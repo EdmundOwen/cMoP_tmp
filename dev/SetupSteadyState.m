@@ -8,6 +8,9 @@ function input = SetupSteadyState(input, varargin)
     
     p = AddParserOption(p, input, 'Niter', 100, @isnumeric);
     p = AddParserOption(p, input, 'SSError', 1e-5, @isnumeric);
+    p = AddParserOption(p, input, 'searchCount', 5, @isnumeric);
+    p = AddParserOption(p, input, 'searchInterval', [0.0 1.0], true);
+    p = AddParserOption(p, input, 'optimalIncrementSearchMethod', 'binarychopExact', true);
     
     %% parse the inputs
     tmp = varargin{:};
@@ -16,5 +19,8 @@ function input = SetupSteadyState(input, varargin)
     %% recover iteration parameters
     input.Niter = round(p.Results.Niter);
     input.SSError = p.Results.SSError;
+    input.searchCount = round(p.Results.searchCount);
+    input.searchInterval = p.Results.searchInterval;
+    input.optimalIncrementSearchMethod = p.Results.optimalIncrementSearchMethod;
     
 end
