@@ -49,7 +49,14 @@ function rho_ss = CalculateSteadyStateWithGradient( input, init_rho, solution )
             end
             
             %% create Jacobian superoperator matrix
-            LJacob = Lmat0{k} + LMF_Deriv(input, solution.rho{k}, solution);
+            % the free evolution is linear
+            LJacob = Lmat0{k};
+            if isempty(cell2mat(strfind(cellfun(@func2str, input.subinput{k}.L, 'UniformOutput', 0), 'LMF'))) == 0
+                LJacob = LJacob + LMF_Deriv(input.subinput{k}, solution.rho{k}, solution);
+            end
+            if isempty(cell2mat(strfind(cellfun(@func2str, input.subinput{k}.L, 'UniformOutput', 0), 'LBTSS'))) == 0
+                LJacob = LJacob + LBTSS_Deriv(input.subinput{k}, solution.rho{k}, solution);
+            end
             
             %% calculate the correction using Newton's method
             %% g' x = -g where g = L * rho
@@ -79,14 +86,14 @@ function rho_ss = CalculateSteadyStateWithGradient( input, init_rho, solution )
                     solution.rho{k} = oldrho  + alpha1 * x;
                     Lrho = zeros(size(solution.rho{k}));
                     for count = 1:numel(input.L)
-                        Lrho = Lrho + L{count}(input, solution.rho{k}, solution);
-                    end                
+                        Lrho = Lrho + L{count}(input.subinput{k}, solution.rho{k}, solution);
+                    end
                     feval1 = norm(reshape(Lrho, [M^2 1]));
                     solution.rho{k} = oldrho  + alpha2 * x;
                     % for alpha2
                     Lrho = 0.0 * Lrho;
                     for count = 1:numel(input.L)
-                        Lrho = Lrho + L{count}(input, solution.rho{k}, solution);
+                        Lrho = Lrho + L{count}(input.subinput{k}, solution.rho{k}, solution);
                     end                
                     feval2 = norm(reshape(Lrho, [M^2 1]));
 
@@ -94,7 +101,7 @@ function rho_ss = CalculateSteadyStateWithGradient( input, init_rho, solution )
                         solution.rho{k} = oldrho + 0.5 * (alpha1 + alpha2) * x;
                         Lrho = 0.0 * Lrho;
                         for count = 1:numel(input.L)
-                            Lrho = Lrho + L{count}(input, solution.rho{k}, solution);
+                            Lrho = Lrho + L{count}(input.subinput{k}, solution.rho{k}, solution);
                         end                
                         fevaltmp = norm(reshape(Lrho, [M^2 1]));
 
@@ -129,7 +136,6 @@ function rho_ss = CalculateSteadyStateWithGradient( input, init_rho, solution )
             
                     % set new_rho to the new value
                     new_rho = solution.rho{k} + 0.5 * (alpha1 + alpha2) * x;
-                    fprintf('\t%g\n', 0.5 * (alpha1+alpha2));
                     
                 otherwise
                     exception = MException('CalculateSteadyStateWithGradient:InputInvalid', ...
