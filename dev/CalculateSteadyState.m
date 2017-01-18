@@ -71,6 +71,9 @@ function rho_ss = CalculateSteadyState( input, init_rho, solution )
                 end
                 converged(k) = true;
             else
+                if input.verbose
+                    fprintf('Iteration %i:  error = %g\n', i, full(error));
+                end
                 converged(k) = false;
             end
         

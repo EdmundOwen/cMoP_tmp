@@ -11,9 +11,10 @@ clustersizey = 2;
 clustersize = clustersizex * clustersizey;
 onsitedim = 2;
 
-Omega = 0.0;
+Omega = 0.4;
 gamma = 1.0;
-J = [10.0, 0.9, 1.0] / 2.0;
+J = [-6.3, 5.4, 6.0] / 2.0;
+withGradient = 1;
 
 %% define the annihilation, creation and Pauli matrices
 a = annihilation(onsitedim);
@@ -31,10 +32,14 @@ input = SetupEnvironment(input, {});
 %% create an initial density matrix and solution
 rho{1} = zeros(input.M);
 rho{1}(1,1) = 1.0;
-rho{1} = InsertOperator((eye(2)+a')/sqrt(2), 1, onsitedim, clustersize) * rho{1} * InsertOperator((eye(2)+a)/sqrt(2), 1, onsitedim, clustersize);
-rho{1} = InsertOperator((eye(2)+a')/sqrt(2), 4, onsitedim, clustersize) * rho{1} * InsertOperator((eye(2)+a)/sqrt(2), 4, onsitedim, clustersize);
+%rho{1} = InsertOperator((eye(2)+a')/sqrt(2), 1, onsitedim, clustersize) * rho{1} * InsertOperator((eye(2)+a)/sqrt(2), 1, onsitedim, clustersize);
+%rho{1} = InsertOperator((eye(2)+a')/sqrt(2), 4, onsitedim, clustersize) * rho{1} * InsertOperator((eye(2)+a)/sqrt(2), 4, onsitedim, clustersize);
 solution = {};
 solution.rho{1} = rho;
+
+%% setup partitions
+input.noPartitions = 1;
+input.subinput{1} = SetupPartition(input, 1);
 
 %% create a new Hamiltonian for the cluster
 H0 = sparse(input.M, input.M);
@@ -69,13 +74,16 @@ for i = 1:clustersizey-1
 end
 H0 = H0 + Hintx + Hinty;
 % and insert the Hamiltonian into the input struct
+input.H0 = H0;
 input.subinput{1}.H0 = H0;
 
 %% create a new set of anisotropic Heisenberg interactions
 int_list = {};
 % the correlations between the interactions
-correlationx = kron(ones(clustersizex), eye(2));
-correlationy = kron(ones(clustersizey), eye(2));
+% correlationx = kron(ones(clustersizex), eye(2));
+% correlationy = kron(ones(clustersizey), eye(2));
+correlationx = kron(eye(clustersizex), eye(2));
+correlationy = kron(eye(clustersizey), eye(2));
 correlation = [correlationx, zeros(2*clustersizex, 2*clustersizey);...
                zeros(2*clustersizey, 2*clustersizex), correlationy];
 correlation = kron(ones(3), correlation);
@@ -116,7 +124,31 @@ end
 input.subinput{1}.interactions = input.interactions;
 
 %% time iterate the original density matrix
-time_varargin = {'Nt', 100, 'dt', 0.01, 'probelist', { @SaveDensity, @SaveCorrelation, @SaveMagnetisation }};
+time_varargin = {'Nt', 30000, 'dt', 0.005, 'probelist', { @SaveDensity, @SaveCorrelation, @SaveMagnetisation }};
+input = SetupTimeIter(input, time_varargin);
+results = TimeIter(input, rho);
+
+toc
+
+%% calculate steady state (if it exists)
+solution.rho = results.rho;
+rho = results.rho;
+input = SetupSteadyState(input, {'SSError', 1e-5, 'Niter', 5000});
+input.verbose = true;
+input.L = { @L0, @LMF, @LBTSS };
+if withGradient
+    tic
+    result = CalculateSteadyStateWithGradient(input, rho, solution);
+    toc
+    return
+else
+    result = CalculateSteadyState(input, rho, solution);
+    toc
+    return
+end
+
+%% time iterate the original density matrix
+time_varargin = {'Nt', 30000, 'dt', 0.005, 'probelist', { @SaveDensity, @SaveCorrelation, @SaveMagnetisation }};
 input = SetupTimeIter(input, time_varargin);
 results = TimeIter(input, rho);
 

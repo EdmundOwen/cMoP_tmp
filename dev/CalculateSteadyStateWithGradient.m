@@ -115,7 +115,9 @@ function rho_ss = CalculateSteadyStateWithGradient( input, init_rho, solution )
                     end
                     % set new_rho to the new value
                     new_rho = oldrho + 0.5 * (alpha1 + alpha2) * x;
-                    fprintf('\t%g\n', 0.5 * (alpha1+alpha2));
+                    if input.verbose
+                        fprintf('Iteration %i:  alpha = %g\n', i, 0.5 * (alpha1+alpha2));
+                    end
                     
                 case 'binarychopLinearized'
                     %% use the current linearized version of the superoperator matrix 
@@ -136,6 +138,10 @@ function rho_ss = CalculateSteadyStateWithGradient( input, init_rho, solution )
             
                     % set new_rho to the new value
                     new_rho = solution.rho{k} + 0.5 * (alpha1 + alpha2) * x;
+                    
+                    if input.verbose
+                        fprintf('Iteration %i:  alpha = %g\n', i, 0.5 * (alpha1+alpha2));
+                    end
                     
                 otherwise
                     exception = MException('CalculateSteadyStateWithGradient:InputInvalid', ...
