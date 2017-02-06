@@ -41,8 +41,11 @@ function result = LBT( input, mat, solution )
                          - solution.hist{partitionIndex}{tprime}.r{k} ...
                                         * trace(Bl.Operator * solution.hist{partitionIndex}{tprime}.skern{k});
             
-                %% add the slice the integral
-                rhs = rhs + dt * slice;
+                %% add the slice the integral using the trapezium rule
+                rhs = rhs + 0.5 * dt * slice;
+                if tprime ~= 1 || tprime ~= numel(solution.hist{partitionIndex})
+                    rhs = rhs + 0.5 * dt * slice;
+                end
             end
         
             %% and evaluate the commutator for this set of interactions
