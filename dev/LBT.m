@@ -30,6 +30,20 @@ function result = LBT( input, mat, solution )
             J2 = interactions{k}.interactionStrength * interactions{l}.interactionStrength;
             Al = interactions{l}.A;
             Bl = interactions{l}.B;
+            % check whether there is information about redundancies in the
+            % interactions which allows us to not recalculate some terms in
+            % the Born term sum
+            if isfield(interactions{k}, 'coordination') && isfield(interactions{l}, 'coordination')
+                if interactions{k}.coordination ~= interactions{l}.coordination
+                    exception = MException('LBT:InputInvalid', ...
+                        'coordination number of correlated Born terms must be the same');
+                    throw(exception)
+                end
+                
+                coordination = interactions{k}.coordination;
+            else
+                coordination = 1;
+            end
         
             rhs = zeros(M, M);
             %% perform rhs integration
@@ -49,7 +63,7 @@ function result = LBT( input, mat, solution )
             end
         
             %% and evaluate the commutator for this set of interactions
-            LBT = LBT - J2 * (Al.Operator * rhs - rhs * Al.Operator);
+            LBT = LBT - J2 * coordination * (Al.Operator * rhs - rhs * Al.Operator);
         
         end
     end

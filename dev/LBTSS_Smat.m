@@ -44,6 +44,20 @@ function result = LBTSS_Smat( input, solution )
             Bk = interactions{k}.B;
             Al = interactions{l}.A;
             Bl = interactions{l}.B;
+            % check whether there is information about redundancies in the
+            % interactions which allows us to not recalculate some terms in
+            % the Born term sum
+            if isfield(interactions{k}, 'coordination') && isfield(interactions{l}, 'coordination')
+                if interactions{k}.coordination ~= interactions{l}.coordination
+                    exception = MException('LBT:InputInvalid', ...
+                        'coordination number of correlated Born terms must be the same');
+                    throw(exception)
+                end
+                
+                coordination = interactions{k}.coordination;
+            else
+                coordination = 1;
+            end
         
             % calculate fluctuations using the previous iteration
             % density matrix in the traces
@@ -85,7 +99,8 @@ function result = LBTSS_Smat( input, solution )
             end
             
             %% and evaluate the commutator for this set of interactions
-            LBTSS = LBTSS - J2 * (matprod(Al.Operator, protoleft) * rhs - matprod(Al.Operator, protoright) * rhs);
+            LBTSS = LBTSS - J2 * coordination * ...
+                            (matprod(Al.Operator, protoleft) * rhs - matprod(Al.Operator, protoright) * rhs);
             
         end
     end

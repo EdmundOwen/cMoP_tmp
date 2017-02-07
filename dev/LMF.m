@@ -22,13 +22,18 @@ function result = LMF( input, mat, solution )
         A = SE_interactions{i}.A;
         B = SE_interactions{i}.B;
         interaction_type = GetFromInput(SE_interactions, 'interactionType', 'unitary');
+        if isfield(SE_interactions{i}, 'coordination')
+            coordination = SE_interactions{i}.coordination;
+        else
+            coordination = 1;
+        end
     
         %% calculate the mean field term for this interaction
         switch (interaction_type)
             case 'unitary'
-                result = result + -1.0i * interaction_strength * comm(B, A, mat, solution.rho);
+                result = result + -1.0i * interaction_strength * coordination * comm(B, A, mat, solution.rho);
             case 'dissipative'
-                result = result + 0.5 * interaction_strength * (comm(B', A, mat, solution.rho) - comm(B, A', mat, solution.rho));
+                result = result + 0.5 * interaction_strength * coordination * (comm(B', A, mat, solution.rho) - comm(B, A', mat, solution.rho));
             otherwise
                 throw exception
         end                
