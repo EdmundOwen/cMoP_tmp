@@ -10,6 +10,7 @@ clustersizex = 1;
 clustersizey = 1;
 clustersize = clustersizex * clustersizey;
 onsitedim = 2;
+latticedim = 100;
 
 Omega = 1.0;
 gamma = 1.0;
@@ -26,8 +27,11 @@ sigma = {sigmax, sigmay, sigmaz};
 %% setup the inputs
 input.exists = true;
 input = SetupSystem(input, {'clustersize', clustersize, 'onsitedim', onsitedim, ...
-                            'gamma', gamma, 'Omega', Omega, 'Delta', 0.0, 'L', { @L0, @LMF }});%, @LMF}});%, @LBTSS }});
+                            'gamma', gamma, 'Omega', Omega, 'Delta', Delta, 'L', { @L0, @LMF }});%, @LMF}});%, @LBTSS }});
 input = SetupEnvironment(input, {});
+% set interactions to null as this is a partitioned system and this
+% shouldn't be used
+input.interactions = [];
 
 %% setup partitions
 input.noPartitions = 2;
@@ -38,6 +42,8 @@ input.subinput{2} = SetupPartition(input, 2);
 rho{1} = zeros(input.M);
 rho{1}(1,1) = 1.0;
 rho{2} = InsertOperator((eye(2)+a')/sqrt(2), 1, onsitedim, clustersize) * rho{1} * InsertOperator((eye(2)+a)/sqrt(2), 1, onsitedim, clustersize);
+% rho{1} = speye(2)/2+0.9159e-3*sigma{3}-0.0023e-3*sigma{1}-0.8658e-3*sigma{2};
+% rho{2}=rho{1};
 solution = {};
 solution.rho = rho;
 
@@ -52,16 +58,25 @@ count = 1;
 for  i = 1:3
     % for the first partition
     input.subinput{1}.interactions{end+1} ...
-         = struct('interactionStrength', 0.5 * J(i), 'A', struct('Operator', sigma{i}), ...
-                    'B', struct('Index', 2, 'Operator', sigma{i}), 'Correlations', [1 1 1]);
+         = struct('interactionStrength', 0.5 * J(i) / latticedim, 'A', struct('Operator', sigma{i}), ...
+                    'B', struct('Index', 2, 'Operator', sigma{i}), 'Correlations', [1 1 1], ....
+                    'coordination', 2 * latticedim);
     % and for the second partition
     input.subinput{2}.interactions{end+1} ...
-         = struct('interactionStrength', 0.5 * J(i), 'A', struct('Operator', sigma{i}), ...
-                    'B', struct('Index', 1, 'Operator', sigma{i}), 'Correlations', [1 1 1]);
+         = struct('interactionStrength', 0.5 * J(i) / latticedim, 'A', struct('Operator', sigma{i}), ...
+                    'B', struct('Index', 1, 'Operator', sigma{i}), 'Correlations', [1 1 1], ....
+                    'coordination', 2 * latticedim);
 end
 
+% tic
+% input = SetupSteadyState(input, {'SSError', 1e-5, 'Niter', 5000});
+% input.verbose = false;
+% result = CalculateSteadyState(input, rho, solution);
+% toc 
+% return
+
 %% time iterate the original density matrix
-time_varargin = {'Nt', 10000, 'dt', 0.005, 'probelist', { @SaveDensity, @SaveCorrelation, @SaveMagnetisation }};
+time_varargin = {'Nt', 3000, 'dt', 0.02, 'probelist', { @SaveRho, @SaveDensity, @SaveCorrelation, @SaveMagnetisation }};
 input = SetupTimeIter(input, time_varargin);
 results = TimeIter(input, rho);
 
