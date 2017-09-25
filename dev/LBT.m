@@ -27,9 +27,23 @@ function result = LBT( input, mat, solution )
             end
             
             %% get the relevant system operators
-            J2 = interactions{k}.interactionStrength * interactions{l}.interactionStrength;
             Al = interactions{l}.A;
             Bl = interactions{l}.B;
+            
+            %% and calculate the correct interaction constant depending on the type of operators            
+            J2 = interactions{k}.interactionStrength * interactions{l}.interactionStrength;
+            int_type_1 = GetFromInput(interactions{k}, 'interactionType', 'unitary');
+            int_type_2 = GetFromInput(interactions{l}, 'interactionType', 'unitary');
+            if int_type_1 == 'unitary' && int_type_2 == 'unitary'
+                continue;
+            elseif (int_type_1 == 'dissipative' && int_type_2 == 'unitary') || (int_type_1 == 'unitary' && int_type_2 == 'dissipative')
+                J2 = -1i * J2;
+            elseif int_type_1 == 'dissipative' && int_type_2 == 'dissipative'
+                J2 = -J2;
+            else
+                throw exception
+            end    
+             
             % check whether there is information about redundancies in the
             % interactions which allows us to not recalculate some terms in
             % the Born term sum
