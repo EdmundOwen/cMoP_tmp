@@ -14,13 +14,14 @@ latticedim = 100;
 
 Omega = 1.0;
 gamma = 1.0;
+Delta = 0.0;
 %J = [-5.5, 6.0, 2.0] * 2.0;  % multiply by 2 to get the coordination number
-J = [-7.0, 6.0, 2.0];  % multiply by 2 to get the coordination number
+J = [-7.0, 6.0, 2.0];
 
 %% define the annihilation, creation and Pauli matrices
 a = annihilation(onsitedim);
 sigmax = a + a'; 
-sigmay = 1i * (a - a');
+sigmay = -1i * (a - a');
 sigmaz = a * a' - a' * a;
 sigma = {sigmax, sigmay, sigmaz};
 
@@ -39,11 +40,12 @@ input.subinput{1} = SetupPartition(input, 1);
 input.subinput{2} = SetupPartition(input, 2);
 
 %% create an initial density matrix and solution
-rho{1} = zeros(input.M);
-rho{1}(1,1) = 1.0;
-rho{2} = InsertOperator((eye(2)+a')/sqrt(2), 1, onsitedim, clustersize) * rho{1} * InsertOperator((eye(2)+a)/sqrt(2), 1, onsitedim, clustersize);
-% rho{1} = speye(2)/2+0.9159e-3*sigma{3}-0.0023e-3*sigma{1}-0.8658e-3*sigma{2};
-% rho{2}=rho{1};
+rhovec1 = [0.3575, 0.5155, 0.4863];
+rhovec2 = [-0.2155, 0.3110, -0.6576];
+
+rho{1} = 0.5*(eye(2)+rhovec1(1)*sigma{1}+rhovec1(2)*sigma{2}+rhovec1(3)*sigma{3});
+rho{2} = 0.5*(eye(2)+rhovec2(1)*sigma{1}+rhovec2(2)*sigma{2}+rhovec2(3)*sigma{3});
+
 solution = {};
 solution.rho = rho;
 

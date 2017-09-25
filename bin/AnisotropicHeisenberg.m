@@ -19,7 +19,7 @@ withGradient = 1;
 %% define the annihilation, creation and Pauli matrices
 a = annihilation(onsitedim);
 sigmax = a + a'; 
-sigmay = 1i * (a - a');
+sigmay = -1i * (a - a');
 sigmaz = a * a' - a' * a;
 sigma = {sigmax, sigmay, sigmaz};
 
