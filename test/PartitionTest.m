@@ -54,14 +54,14 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) P
             a = annihilation(tc.input.onsitedim);
             % for the first partition
             tc.input.subinput{1}.interactions{end+1} ...
-                = struct('interactionStrength', tc.input.J, 'A', struct('Operator', a), 'B', struct('Index', 2, 'Operator', a'), 'Correlations', [1 1]);
+                = struct('interactionStrength', tc.input.J, 'A', struct('Index', 1, 'Operator', a), 'B', struct('Index', 2, 'Operator', a'), 'Correlations', [1 1]);
             tc.input.subinput{1}.interactions{end+1} ...
-                = struct('interactionStrength', tc.input.J, 'A', struct('Operator', a'), 'B', struct('Index', 2, 'Operator', a), 'Correlations', [1 1]);
+                = struct('interactionStrength', tc.input.J, 'A', struct('Index', 1, 'Operator', a'), 'B', struct('Index', 2, 'Operator', a), 'Correlations', [1 1]);
             % for the second partition
             tc.input.subinput{2}.interactions{end+1} ...
-                = struct('interactionStrength', tc.input.J, 'A', struct('Operator', a), 'B', struct('Index', 1, 'Operator', a'), 'Correlations', [1 1]);
+                = struct('interactionStrength', tc.input.J, 'A', struct('Index', 2, 'Operator', a), 'B', struct('Index', 1, 'Operator', a'), 'Correlations', [1 1]);
             tc.input.subinput{2}.interactions{end+1} ...
-                = struct('interactionStrength', tc.input.J, 'A', struct('Operator', a'), 'B', struct('Index', 1, 'Operator', a), 'Correlations', [1 1]);
+                = struct('interactionStrength', tc.input.J, 'A', struct('Index', 2, 'Operator', a'), 'B', struct('Index', 1, 'Operator', a), 'Correlations', [1 1]);
             
             % set up the density matrix
             tc.rho = cell(1,2);
@@ -96,22 +96,22 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) P
             am = kron(speye(tc.input.onsitedim^(tc.input.clustersize - 1)), annihilation(tc.input.onsitedim));
             % for the first partition
             tc.input.subinput{1}.interactions{end+1} ...
-                = struct('interactionStrength', tc.input.J, 'A', struct('Operator', a1), 'B', struct('Index', 2, 'Operator', am'), 'Correlations', [1 1 1 1]);
+                = struct('interactionStrength', tc.input.J, 'A', struct('Index', 1, 'Operator', a1), 'B', struct('Index', 2, 'Operator', am'), 'Correlations', [1 1 1 1]);
             tc.input.subinput{1}.interactions{end+1} ...
-                = struct('interactionStrength', tc.input.J, 'A', struct('Operator', a1'), 'B', struct('Index', 2, 'Operator', am), 'Correlations', [1 1 1 1]);
+                = struct('interactionStrength', tc.input.J, 'A', struct('Index', 1, 'Operator', a1'), 'B', struct('Index', 2, 'Operator', am), 'Correlations', [1 1 1 1]);
             tc.input.subinput{1}.interactions{end+1} ...
-                = struct('interactionStrength', tc.input.J, 'A', struct('Operator', am), 'B', struct('Index', 2, 'Operator', a1'), 'Correlations', [1 1 1 1]);
+                = struct('interactionStrength', tc.input.J, 'A', struct('Index', 1, 'Operator', am), 'B', struct('Index', 2, 'Operator', a1'), 'Correlations', [1 1 1 1]);
             tc.input.subinput{1}.interactions{end+1} ...
-                = struct('interactionStrength', tc.input.J, 'A', struct('Operator', am'), 'B', struct('Index', 2, 'Operator', a1), 'Correlations', [1 1 1 1]);
+                = struct('interactionStrength', tc.input.J, 'A', struct('Index', 1, 'Operator', am'), 'B', struct('Index', 2, 'Operator', a1), 'Correlations', [1 1 1 1]);
             % for the second partition
             tc.input.subinput{2}.interactions{end+1} ...
-                = struct('interactionStrength', tc.input.J, 'A', struct('Operator', a1), 'B', struct('Index', 1, 'Operator', am'), 'Correlations', [1 1 1 1]);
+                = struct('interactionStrength', tc.input.J, 'A', struct('Index', 2, 'Operator', a1), 'B', struct('Index', 1, 'Operator', am'), 'Correlations', [1 1 1 1]);
             tc.input.subinput{2}.interactions{end+1} ...
-                = struct('interactionStrength', tc.input.J, 'A', struct('Operator', a1'), 'B', struct('Index', 1, 'Operator', am), 'Correlations', [1 1 1 1]);
+                = struct('interactionStrength', tc.input.J, 'A', struct('Index', 2, 'Operator', a1'), 'B', struct('Index', 1, 'Operator', am), 'Correlations', [1 1 1 1]);
             tc.input.subinput{2}.interactions{end+1} ...
-                = struct('interactionStrength', tc.input.J, 'A', struct('Operator', am), 'B', struct('Index', 1, 'Operator', a1'), 'Correlations', [1 1 1 1]);
+                = struct('interactionStrength', tc.input.J, 'A', struct('Index', 2, 'Operator', am), 'B', struct('Index', 1, 'Operator', a1'), 'Correlations', [1 1 1 1]);
             tc.input.subinput{2}.interactions{end+1} ...
-                = struct('interactionStrength', tc.input.J, 'A', struct('Operator', am'), 'B', struct('Index', 1, 'Operator', a1), 'Correlations', [1 1 1 1]);
+                = struct('interactionStrength', tc.input.J, 'A', struct('Index', 2, 'Operator', am'), 'B', struct('Index', 1, 'Operator', a1), 'Correlations', [1 1 1 1]);
             
             % check to see that the inputs are valid ..
             % the system is a unitary, undriven evolution of a spin
