@@ -49,22 +49,24 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) P
             tc.input = SetupTimeIter(tc.input, timeiter_varargin);
             
             % set up the interactions between the partitions
-            tc.input.subinput{1}.interactions = {};
-            tc.input.subinput{2}.interactions = {};
             a = annihilation(tc.input.onsitedim);
+            keySet = {'interactionStrength', 'A', 'B', 'correlations'};
             % for the first partition
-            tc.input.subinput{1}.interactions{end+1} ...
-                = struct('interactionStrength', tc.input.J, 'A', struct('Index', 1, 'Operator', a), 'B', struct('Index', 2, 'Operator', a'), 'Correlations', [1 1]);
-            tc.input.subinput{1}.interactions{end+1} ...
-                = struct('interactionStrength', tc.input.J, 'A', struct('Index', 1, 'Operator', a'), 'B', struct('Index', 2, 'Operator', a), 'Correlations', [1 1]);
+            int_list_1{1} = containers.Map(keySet, {tc.input.J, struct('Index', 1, 'SiteOperator', a, 'SiteLabel', 1), ...
+                                                                struct('Index', 2, 'SiteOperator', a', 'SiteLabel', 1), [1 1]});
+            int_list_1{2} = containers.Map(keySet, {tc.input.J, struct('Index', 1, 'SiteOperator', a', 'SiteLabel', 1), ...
+                                                                struct('Index', 2, 'SiteOperator', a, 'SiteLabel', 1), [1 1]});
             % for the second partition
-            tc.input.subinput{2}.interactions{end+1} ...
-                = struct('interactionStrength', tc.input.J, 'A', struct('Index', 2, 'Operator', a), 'B', struct('Index', 1, 'Operator', a'), 'Correlations', [1 1]);
-            tc.input.subinput{2}.interactions{end+1} ...
-                = struct('interactionStrength', tc.input.J, 'A', struct('Index', 2, 'Operator', a'), 'B', struct('Index', 1, 'Operator', a), 'Correlations', [1 1]);
+            int_list_2{1} = containers.Map(keySet, {tc.input.J, struct('Index', 2, 'SiteOperator', a, 'SiteLabel', 1), ...
+                                                                struct('Index', 1, 'SiteOperator', a', 'SiteLabel', 1), [1 1]});
+            int_list_2{2} = containers.Map(keySet, {tc.input.J, struct('Index', 2, 'SiteOperator', a', 'SiteLabel', 1), ...
+                                                                struct('Index', 1, 'SiteOperator', a, 'SiteLabel', 1), [1 1]});
+            % and create the interactions
+            tc.input.subinput{1}.interactions = CreateInteractions(tc.input, int_list_1);
+            tc.input.subinput{2}.interactions = CreateInteractions(tc.input, int_list_2);
             
             % set up the density matrix
-            tc.rho = cell(1,2);
+            tc.rho = cell(1, 2);
             tc.rho{1} = [0, 0; 0, 1]; tc.rho{2} = [1, 0; 0, 0];
             
             % iterate the density matrix such that the excitation moves
@@ -83,36 +85,6 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) P
             % Flesch et al. but for two coupled, partitioned cMoP systems
             % http://dx.doi.org/10.1103/PhysRevB.89.245108
             
-            % add SaveRho to the list of probes to evaluate the single-site
-            % density
-            dt = 0.005; Nt = 30;
-            timeiter_varargin = {'dt', dt, 'Nt', Nt, 'probelist', { @SaveDensity } };
-            tc.input = SetupTimeIter(tc.input, timeiter_varargin);
-            
-            % set up the couplings between the partitions
-            tc.input.subinput{1}.interactions = {};
-            tc.input.subinput{2}.interactions = {};
-            a1 = kron(annihilation(tc.input.onsitedim), speye(tc.input.onsitedim^(tc.input.clustersize - 1)));
-            am = kron(speye(tc.input.onsitedim^(tc.input.clustersize - 1)), annihilation(tc.input.onsitedim));
-            % for the first partition
-            tc.input.subinput{1}.interactions{end+1} ...
-                = struct('interactionStrength', tc.input.J, 'A', struct('Index', 1, 'Operator', a1), 'B', struct('Index', 2, 'Operator', am'), 'Correlations', [1 1 1 1]);
-            tc.input.subinput{1}.interactions{end+1} ...
-                = struct('interactionStrength', tc.input.J, 'A', struct('Index', 1, 'Operator', a1'), 'B', struct('Index', 2, 'Operator', am), 'Correlations', [1 1 1 1]);
-            tc.input.subinput{1}.interactions{end+1} ...
-                = struct('interactionStrength', tc.input.J, 'A', struct('Index', 1, 'Operator', am), 'B', struct('Index', 2, 'Operator', a1'), 'Correlations', [1 1 1 1]);
-            tc.input.subinput{1}.interactions{end+1} ...
-                = struct('interactionStrength', tc.input.J, 'A', struct('Index', 1, 'Operator', am'), 'B', struct('Index', 2, 'Operator', a1), 'Correlations', [1 1 1 1]);
-            % for the second partition
-            tc.input.subinput{2}.interactions{end+1} ...
-                = struct('interactionStrength', tc.input.J, 'A', struct('Index', 2, 'Operator', a1), 'B', struct('Index', 1, 'Operator', am'), 'Correlations', [1 1 1 1]);
-            tc.input.subinput{2}.interactions{end+1} ...
-                = struct('interactionStrength', tc.input.J, 'A', struct('Index', 2, 'Operator', a1'), 'B', struct('Index', 1, 'Operator', am), 'Correlations', [1 1 1 1]);
-            tc.input.subinput{2}.interactions{end+1} ...
-                = struct('interactionStrength', tc.input.J, 'A', struct('Index', 2, 'Operator', am), 'B', struct('Index', 1, 'Operator', a1'), 'Correlations', [1 1 1 1]);
-            tc.input.subinput{2}.interactions{end+1} ...
-                = struct('interactionStrength', tc.input.J, 'A', struct('Index', 2, 'Operator', am'), 'B', struct('Index', 1, 'Operator', a1), 'Correlations', [1 1 1 1]);
-            
             % check to see that the inputs are valid ..
             % the system is a unitary, undriven evolution of a spin
             % chain
@@ -120,6 +92,37 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) P
                     || tc.input.gamma ~= 0.0 || tc.input.Omega ~= 0.0
                 return
             end
+            
+            % add SaveRho to the list of probes to evaluate the single-site
+            % density
+            dt = 0.005; Nt = 30;
+            timeiter_varargin = {'dt', dt, 'Nt', Nt, 'probelist', { @SaveDensity } };
+            tc.input = SetupTimeIter(tc.input, timeiter_varargin);
+            
+            % set up the couplings between the partitions
+            a = annihilation(tc.input.onsitedim);
+            keySet = {'interactionStrength', 'A', 'B', 'correlations'};
+            % for the first partition
+            int_list_1{1} = containers.Map(keySet, {tc.input.J, struct('Index', 1, 'SiteOperator', a, 'SiteLabel', 1), ...
+                                                                struct('Index', 2, 'SiteOperator', a', 'SiteLabel', 2), [1 1 1 1]});
+            int_list_1{2} = containers.Map(keySet, {tc.input.J, struct('Index', 1, 'SiteOperator', a', 'SiteLabel', 1), ...
+                                                                struct('Index', 2, 'SiteOperator', a, 'SiteLabel', 2), [1 1 1 1]});
+            int_list_1{3} = containers.Map(keySet, {tc.input.J, struct('Index', 1, 'SiteOperator', a, 'SiteLabel', 2), ...
+                                                                struct('Index', 2, 'SiteOperator', a', 'SiteLabel', 1), [1 1 1 1]});
+            int_list_1{4} = containers.Map(keySet, {tc.input.J, struct('Index', 1, 'SiteOperator', a', 'SiteLabel', 2), ...
+                                                                struct('Index', 2, 'SiteOperator', a, 'SiteLabel', 1), [1 1 1 1]});
+            % for the second partition
+            int_list_2{1} = containers.Map(keySet, {tc.input.J, struct('Index', 2, 'SiteOperator', a, 'SiteLabel', 1), ...
+                                                                struct('Index', 1, 'SiteOperator', a', 'SiteLabel', 2), [1 1 1 1]});
+            int_list_2{2} = containers.Map(keySet, {tc.input.J, struct('Index', 2, 'SiteOperator', a', 'SiteLabel', 1), ...
+                                                                struct('Index', 1, 'SiteOperator', a, 'SiteLabel', 2), [1 1 1 1]});
+            int_list_2{3} = containers.Map(keySet, {tc.input.J, struct('Index', 2, 'SiteOperator', a, 'SiteLabel', 2), ...
+                                                                struct('Index', 1, 'SiteOperator', a', 'SiteLabel', 1), [1 1 1 1]});
+            int_list_2{4} = containers.Map(keySet, {tc.input.J, struct('Index', 2, 'SiteOperator', a', 'SiteLabel', 2), ...
+                                                                struct('Index', 1, 'SiteOperator', a, 'SiteLabel', 1), [1 1 1 1]});
+            % and create the interactions
+            tc.input.subinput{1}.interactions = CreateInteractions(tc.input, int_list_1);
+            tc.input.subinput{2}.interactions = CreateInteractions(tc.input, int_list_2);
             
             % tensor product the two site density matrix to create the
             % system density matrix

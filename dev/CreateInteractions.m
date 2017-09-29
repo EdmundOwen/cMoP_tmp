@@ -16,12 +16,6 @@ function interactions = CreateInteractions( input, interaction_map )
         A_site_operator = interaction_map{i}('A').SiteOperator;
         B_site_label = interaction_map{i}('B').SiteLabel;
         B_site_operator = interaction_map{i}('B').SiteOperator;
-        % get the interaction type if it exists
-        if isKey(interaction_map{i}, 'interactionType')
-            interaction_type = interaction_map{i}('interactionType');
-        else % default is unitary
-            interaction_type = 'unitary';
-        end
         
         % create system interaction operator
         A_operator = InsertOperator(A_site_operator, A_site_label, onsitedim, clustersize);
@@ -36,9 +30,20 @@ function interactions = CreateInteractions( input, interaction_map )
         interactions{i}.B.Index = interaction_map{i}('B').Index;
         interactions{i}.B.Operator = B_operator;
         interactions{i}.Correlations = interaction_map{i}('correlations');
-        interactions{i}.interactionType = interaction_type;
-%         interactions{i} = {interaction_list{i}{1}, A_operator, B_operator, ...
-%                                 interaction_list{i}{6}, interaction_type};
+        
+        % get the interaction type if it exists
+        if isKey(interaction_map{i}, 'interactionType')
+            interactions{i}.interaction_type = interaction_map{i}('interactionType');
+        else % default is unitary
+            interactions{i}.interaction_type = 'unitary';
+        end
+        
+        % get the coordination number if it exists
+        if isKey(interaction_map{i}, 'coordination')
+            interactions{i}.coordination = interaction_map{i}('coordination');
+        else
+            interactions{i}.coordination = 1;
+        end
     end
 
 end
