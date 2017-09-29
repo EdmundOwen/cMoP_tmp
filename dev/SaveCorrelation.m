@@ -2,7 +2,13 @@
 %%% Only called if needed
 
 function result = SaveCorrelation( result, input, timestep )
-        
+    
+    if (input.noPartitions ~= 1)
+            exception = MException('SaveCorrelation:NotImplementedException', ...
+                strcat('noPartitions = ', input.noPartitions, ' is not implemented in SaveCorrelation'));
+            throw(exception)
+    end
+
     % save the density matrix (for post-simulation analysis rather than
     % calculations)
     rho = result.rho;

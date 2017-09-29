@@ -1,13 +1,16 @@
 %%% A function to save the density matrox.  Only called if needed
 
-function result = SaveRho( result, input, i )
+function solution = SaveRho( solution, input, timestep )
         
-    % save the density matrix (for post-simulation analysis rather than
-    % calculations)
-    rho = result.rho;
+    for i = 1:input.noPartitions
+        % get the density matrix
+        subinput = input.subinput{i};
+        partitionIndex = subinput.partitionIndex;
+        rho = solution.rho{partitionIndex};
     
-    % save this to the history
-    result.hist{input.partitionIndex}{i}.rho = rho{input.partitionIndex};
+        % save this to the history
+        solution.hist{partitionIndex}{timestep}.rho = rho;
+    end
 
 end
 

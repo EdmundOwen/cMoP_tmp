@@ -23,10 +23,8 @@ function result = TimeIter(input, rho)
         result.rho = new_rho;
         if mod(i, input.NTest) == 0
             for j = 1:numel(input.probelist)
-                for k = 1:input.noPartitions
-                    % save results from the old time step 
-                    result = input.probelist{j}(result, input.subinput{k}, i);
-                end
+                % save results from the old time step 
+                result = input.probelist{j}(result, input, i);
             end
         end
         
