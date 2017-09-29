@@ -29,9 +29,7 @@ function result = TimeIter(input, rho)
         end
         
         % iterate the density matrix and memory functions
-        for k = 1:input.noPartitions
-            [new_rho{k}, result] = PerformTimeStep(result.rho{k}, result, L, input.subinput{k}, dt, input.method);
-        end
+        [new_rho, result] = PerformTimeStep(result.rho, result, L, input, dt, input.method);
         
     end
     
