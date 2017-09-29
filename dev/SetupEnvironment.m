@@ -52,16 +52,8 @@ H_int_list{4} = containers.Map(keySet, ...
 % H_int_list{4} = {V, clustersize, a_loc, 1, a_loc', correlation(4, :)};
 
     %% actually create the interactions
-    input.interactions = CreateInteractions(input, H_int_list);
-    
-    %% couple the partitions
-    for j = 1:numel(input.interactions)
-        input.interactions{j}.B.Index = 1;
-    end
-
-    %% and attach these interactions to each partition
     for k = 1:input.noPartitions
-        input.subinput{k}.interactions = input.interactions;
+        input.subinput{k}.interactions = CreateInteractions(input, H_int_list);
     end
 end
 
