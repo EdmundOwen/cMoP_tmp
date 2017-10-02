@@ -29,6 +29,13 @@ function [mat, solution] = Heun(mat, solution, L, input, dt)
         end
     end
     
+    %% update the density matrix in solution
+    if ~input.isMemory
+        for i = 1:input.noPartitions
+            solution.rho{i} = solution.rho{i} + dt * k1{i};
+        end
+    end
+    
     %% Calculate values at the initial time point
     for i = 1:input.noPartitions
         %% recalculate the rhs of the Louiville equation using the predicted values

@@ -28,13 +28,29 @@ function [mat, solution] = RungeKutta(mat, solution, L, input, dt)
         end
     end
     
-    %% Calculate values at the middle time point
+    %% update the density matrix in solution
+    if ~input.isMemory
+        for i = 1:input.noPartitions
+            solution.rho{i} = solution.rho{i} + 0.5 * dt * k1{i};
+        end
+    end
+    
+    %% Calculate the rhs at the midpoint using k1
     for i = 1:input.noPartitions
-        % calculate the rhs at the midpoint using k1
         for j = 1:numel(L)
             k2{i} = k2{i} + L{j}( input.subinput{i}, mat{i} + 0.5 * dt * k1{i}, solution );
         end
-        % and using k2
+    end    
+    
+    %% update the density matrix in solution
+    if ~input.isMemory
+        for i = 1:input.noPartitions
+            solution.rho{i} = solution.rho{i} - 0.5 * dt * k1{i} + 0.5 * dt * k2{i};
+        end
+    end
+    
+    %% Calculate the rhs at the midpoint using k2
+    for i = 1:input.noPartitions
         for j = 1:numel(L)
             k3{i} = k3{i} + L{j}( input.subinput{i}, mat{i} + 0.5 * dt * k2{i}, solution );
         end
@@ -44,6 +60,13 @@ function [mat, solution] = RungeKutta(mat, solution, L, input, dt)
     for i = 1:input.noPartitions
         if input.memoryNeeded && ~input.isMemory
             solution = IterateMemory(solution, input.subinput{i}, 0.5 * dt, 'runge-kutta');
+        end
+    end
+    
+    %% update the density matrix in solution
+    if ~input.isMemory
+        for i = 1:input.noPartitions
+            solution.rho{i} = solution.rho{i} - 0.5 * dt * k2{i} + dt * k3{i};
         end
     end
     
