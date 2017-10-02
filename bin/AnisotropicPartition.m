@@ -12,11 +12,9 @@ clustersize = clustersizex * clustersizey;
 onsitedim = 2;
 latticedim = 100;
 
-Omega = 1.0;
 gamma = 1.0;
 Delta = 0.0;
-%J = [-5.5, 6.0, 2.0] * 2.0;  % multiply by 2 to get the coordination number
-J = [-7.0, 6.0, 2.0];
+J = [-7.0, 6.0, 2.0]; Omega = 1.0;
 
 %% define the annihilation, creation and Pauli matrices
 a = annihilation(onsitedim);
@@ -29,6 +27,10 @@ sigma = {sigmax, sigmay, sigmaz};
 input.exists = true;
 input = SetupSystem(input, {'clustersize', clustersize, 'onsitedim', onsitedim, ...
                             'gamma', gamma, 'Omega', Omega, 'Delta', Delta, 'L', { @L0, @LMF }});%, @LMF}});%, @LBTSS }});
+                        
+%% HACK!!!  The raising spin operator is the transpose of the QHO creation operator (and similarly for the lowering operator)
+input.A_Lindblad{1} = [0, 0; 1, 0];
+                        
 input = SetupEnvironment(input, {});
 % set interactions to null as this is a partitioned system and this
 % shouldn't be used
@@ -50,25 +52,23 @@ solution = {};
 solution.rho = rho;
 
 %% create a new set of anisotropic Heisenberg interactions
-int_list = {};
-% set up the couplings between the partitions
-input.subinput{1}.interactions = {};
-input.subinput{2}.interactions = {};
+int_list_1 = cell(1,2);
+int_list_2 = cell(1,2);
 
+keySet = {'interactionStrength', 'A', 'B', 'correlations', 'coordination'};
 % Pauli x, y, then z operators
-count = 1;
 for  i = 1:3
     % for the first partition
-    input.subinput{1}.interactions{end+1} ...
-         = struct('interactionStrength', 0.5 * J(i) / latticedim, 'A', struct('Operator', sigma{i}), ...
-                    'B', struct('Index', 2, 'Operator', sigma{i}), 'Correlations', [1 1 1], ....
-                    'coordination', 2 * latticedim);
+    int_list_1{i} = containers.Map(keySet, ...
+                    {0.5 * J(i) / latticedim, struct('Index', 1, 'SiteOperator', sigma{i}, 'SiteLabel', 1), ...
+                         struct('Index', 2, 'SiteOperator', sigma{i}, 'SiteLabel', 1), [1 1 1], 2 * latticedim});
     % and for the second partition
-    input.subinput{2}.interactions{end+1} ...
-         = struct('interactionStrength', 0.5 * J(i) / latticedim, 'A', struct('Operator', sigma{i}), ...
-                    'B', struct('Index', 1, 'Operator', sigma{i}), 'Correlations', [1 1 1], ....
-                    'coordination', 2 * latticedim);
+    int_list_2{i} = containers.Map(keySet, ...
+                    {0.5 * J(i) / latticedim, struct('Index', 2, 'SiteOperator', sigma{i}, 'SiteLabel', 1), ...
+                         struct('Index', 1, 'SiteOperator', sigma{i}, 'SiteLabel', 1), [1 1 1], 2 * latticedim});
 end
+input.subinput{1}.interactions = CreateInteractions(input, int_list_1);
+input.subinput{2}.interactions = CreateInteractions(input, int_list_2);
 
 % tic
 % input = SetupSteadyState(input, {'SSError', 1e-5, 'Niter', 5000});
@@ -78,33 +78,34 @@ end
 % return
 
 %% time iterate the original density matrix
-time_varargin = {'Nt', 3000, 'dt', 0.02, 'probelist', { @SaveRho, @SaveDensity, @SaveCorrelation, @SaveMagnetisation }};
+Nt = 5001; dt = 0.01; time_array = (1:Nt) * dt;
+time_varargin = {'Nt', Nt, 'dt', dt, 'probelist', { @SaveRho, @SaveDensity, @SaveMagnetisation }};
 input = SetupTimeIter(input, time_varargin);
 results = TimeIter(input, rho);
 
 %% analyse the data ...
-for time = 1:numel(results.hist{1})
+for time = 1:Nt
     sigmaxfinal1(:, time) = results.hist{1}{time}.sigmax;
     sigmaxfinal2(:, time) = results.hist{2}{time}.sigmax;
 end
 figure(1)
-plot(1:time, sigmaxfinal1', 1:time, sigmaxfinal2');
+plot(time_array, sigmaxfinal1', time_array, sigmaxfinal2');
 ylim([-1.0 1.0]);
 
-for time = 1:numel(results.hist{1})
+for time = 1:Nt
     sigmayfinal1(:, time) = results.hist{1}{time}.sigmay;
     sigmayfinal2(:, time) = results.hist{2}{time}.sigmay;
 end
 figure(2)
-plot(1:time, sigmayfinal1', 1:time, sigmayfinal2');
+plot(time_array, sigmayfinal1', time_array, sigmayfinal2');
 ylim([-1.0 1.0]);
 
-for time = 1:numel(results.hist{1})
+for time = 1:Nt
     sigmazfinal1(:, time) = results.hist{1}{time}.sigmaz;
     sigmazfinal2(:, time) = results.hist{2}{time}.sigmaz;
 end
 figure(3)
-plot(1:time, sigmazfinal1', 1:time, sigmazfinal2');
+plot(time_array, sigmazfinal1', time_array, sigmazfinal2');
 ylim([-1.0 1.0]);
 
 toc
