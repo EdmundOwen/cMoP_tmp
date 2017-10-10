@@ -62,7 +62,7 @@ function input = SetupSystem(input, varargin)
     input.termsNeedingMemory = { @LBT };
     for i = 1:numel(input.L)
         for j = 1:numel(input.termsNeedingMemory)
-            if isequal(input.L{i}, input.termsNeedingMemory{j})
+            if strcmp(func2str(input.L{i}), func2str(input.termsNeedingMemory{j}))
                 input.memoryNeeded = true;
             end
         end
