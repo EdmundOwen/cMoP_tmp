@@ -45,8 +45,9 @@ function solution = updateLmatrices( L, solution, input )
     % or if the term uses memory, save it to solution
     for i = 1:numel(L)
         for j = 1:numel(input.termsNeedingMemory)
-            if isempty(solution.Lmat{i}) && ~isequal(L{i}, input.termsNeedingMemory{j}) || ...
-                                                        isequal(input.termsNeedingMemory{j}, L{i})
+            if isempty(solution.Lmat{i}) ...
+                    && ~strcmp(func2str(L{i}), func2str(input.termsNeedingMemory{j})) ...
+                    || strcmp(func2str(input.termsNeedingMemory{j}), func2str(L{i}))
                 
                 solution.Lmat{i} = CreateSuperoperatorMatrix(L{i}, input, solution);
                 

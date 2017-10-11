@@ -89,7 +89,12 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
             %%% as in TimeIterTest
             
             % test for setups containing only linear terms
-            if ~isequal(tc.input.L, { @L0 })
+            L_strlist = cell(1, numel(tc.input.L));
+            L_ref = { 'L0' };
+            for i = 1:numel(tc.input.L)
+                L_strlist{i} = func2str(tc.input.L{i});
+            end
+            if ~isequal(L_strlist, L_ref)
                 return
             end
             
@@ -129,7 +134,12 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
             
             % if using the steady state Born term superoperator, don't
             % bother
-            if isequal(tc.input.L, { @L0, @LMF, @LBTSS })
+            L_strlist = cell(1, numel(tc.input.L));
+            L_ref = { 'L0', 'LMF', 'LBTSS' };
+            for i = 1:numel(tc.input.L)
+                L_strlist{i} = func2str(tc.input.L{i});
+            end
+            if isequal(L_strlist, L_ref)
                 return
             end
             
@@ -163,7 +173,12 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
             
             % only do this test if the test case is in the mean field
             % approximation
-            if ~isequal(tc.input.L, { @L0, @LMF })
+            L_strlist = cell(1, numel(tc.input.L));
+            L_ref = { 'L0', 'LMF' };
+            for i = 1:numel(tc.input.L)
+                L_strlist{i} = func2str(tc.input.L{i});
+            end
+            if ~isequal(L_strlist, L_ref)
                 return
             end
             
@@ -234,7 +249,12 @@ classdef (SharedTestFixtures={matlab.unittest.fixtures.PathFixture('../dev')}) S
             
             % check that the input superoperators contains the Born terms
             % and that it's a spin chain
-            if ~isequal(tc.input.L, { @L0, @LMF, @LBTSS }) || tc.input.onsitedim ~= 2
+            L_strlist = cell(1, numel(tc.input.L));
+            L_ref = { 'L0', 'LMF', 'LBTSS' };
+            for i = 1:numel(tc.input.L)
+                L_strlist{i} = func2str(tc.input.L{i});
+            end
+            if ~isequal(L_strlist, L_ref) || tc.input.onsitedim ~= 2
                 return
             end
             

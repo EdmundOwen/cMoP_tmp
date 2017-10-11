@@ -16,7 +16,7 @@ function rho_ss = CalculateSteadyStateWithGradient( input, init_rho, solution )
     for k = 1:input.noPartitions
         %% create the linear superoperators
         for i = 1:numel(L)
-            if isequal(L{i}, input.isLinear)
+            if strcmp(func2str(L{i}), func2str(input.isLinear))
                 Lmat0{k} = CreateSuperoperatorMatrix( L{i}, input.subinput{k}, solution );
             end
         end
@@ -43,7 +43,7 @@ function rho_ss = CalculateSteadyStateWithGradient( input, init_rho, solution )
             %% create the new superoperators matrices
             Liter = Lmat0{k};
             for j = 1:numel(L)
-                if ~isequal(L{j}, input.isLinear)
+                if ~strcmp(func2str(L{j}), func2str(input.isLinear))
                     Liter = Liter + CreateSuperoperatorMatrix(L{j}, input.subinput{k}, solution);
                 end
             end

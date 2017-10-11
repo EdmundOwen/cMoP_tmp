@@ -15,7 +15,10 @@ function [steadystate, errortype] = CheckForSteadyState( Lmat )
 
     % calculate the eigenvalues of the input matrix and test them
     eigvals = eig(full(Lmat));
-    if sum(abs(eigvals) < machine_tol) > 1
+    if numel(eigvals) == 0
+        steadystate = false;
+        errortype = 'empty eigenvalue vector';
+    elseif sum(abs(eigvals) < machine_tol) > 1
         steadystate = false;
         errortype = 'zero eigenvalue is degenerate';
     elseif sum(abs(eigvals) < machine_tol) == 0
