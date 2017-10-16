@@ -28,8 +28,10 @@ function result = LMF( input, mat, solution )
         switch (interaction_type)
             case 'unitary'
                 result = result + -1.0i * interaction_strength * coordination * comm(B, A, mat, solution.rho);
-            case 'dissipative'
-                result = result + 0.5 * interaction_strength * coordination * (comm(B', A, mat, solution.rho) - comm(B, A', mat, solution.rho));
+            case 'dissipative_ARB'
+                result = result + 0.5 * interaction_strength * coordination * comm(B', A, mat, solution.rho);
+            case 'dissipative_BRA'
+                result = result - 0.5 * interaction_strength * coordination * (comm(B, A', mat, solution.rho))';
             otherwise
                 throw exception
         end                

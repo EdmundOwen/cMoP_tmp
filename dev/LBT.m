@@ -27,7 +27,20 @@ function result = LBT( input, mat, solution )
             end
             
             %% get the relevant system operators
+            % and calculate the correct interaction constant depending on the type of operators            
             J2 = interactions{k}.interactionStrength * interactions{l}.interactionStrength;
+            int_type_k = GetFromInput(interactions{k}, 'interactionType', 'unitary');
+            int_type_l = GetFromInput(interactions{l}, 'interactionType', 'unitary');
+            if strcmp(int_type_k, 'unitary') && strcmp(int_type_l, 'unitary')
+                ;
+            elseif (strcmp(int_type_k, 'dissipative') && strcmp(int_type_l, 'unitary')) ...
+                        || (strcmp(int_type_k, 'unitary') && strcmp(int_type_l, 'dissipative'))
+                J2 = -1i * J2;
+            elseif strcmp(int_type_k, 'dissipative') && strcmp(int_type_l, 'dissipative')
+                J2 = -J2;
+            else
+                throw exception
+            end
             Al = interactions{l}.A;
             Bl = interactions{l}.B;
             if interactions{k}.coordination ~= interactions{l}.coordination
@@ -42,10 +55,17 @@ function result = LBT( input, mat, solution )
             for tprime = 1:numel(solution.hist{partitionIndex})
             
                 %% calculate the slice with the contracted d and s term
-                slice = solution.hist{partitionIndex}{tprime}.c{k} ...
-                                        * trace(Bl.Operator * solution.hist{partitionIndex}{tprime}.dkern{k}) ...
-                         - solution.hist{partitionIndex}{tprime}.r{k} ...
-                                        * trace(Bl.Operator * solution.hist{partitionIndex}{tprime}.skern{k});
+                if strcmp(int_type_l, 'dissipative_ARB')
+                    slice = solution.hist{partitionIndex}{tprime}.c{k} ...
+                                            * trace(Bl.Operator' * solution.hist{partitionIndex}{tprime}.dkern{k}) ...
+                             - solution.hist{partitionIndex}{tprime}.r{k} ...
+                                            * trace(Bl.Operator' * solution.hist{partitionIndex}{tprime}.skern{k});
+                else
+                    slice = solution.hist{partitionIndex}{tprime}.c{k} ...
+                                            * trace(Bl.Operator * solution.hist{partitionIndex}{tprime}.dkern{k}) ...
+                             - solution.hist{partitionIndex}{tprime}.r{k} ...
+                                            * trace(Bl.Operator * solution.hist{partitionIndex}{tprime}.skern{k});
+                end
             
                 %% add the slice the integral using the trapezium rule
                 rhs = rhs + 0.5 * dt * slice;
@@ -55,7 +75,11 @@ function result = LBT( input, mat, solution )
             end
         
             %% and evaluate the commutator for this set of interactions
-            LBT = LBT - J2 * coordination * (Al.Operator * rhs - rhs * Al.Operator);
+            if strcmp(int_type_l, 'dissipative_BRA')
+                LBT = LBT + J2 * coordination * (Al.Operator' * rhs - rhs * Al.Operator');
+            else
+                LBT = LBT - J2 * coordination * (Al.Operator * rhs - rhs * Al.Operator);
+            end
         
         end
     end

@@ -10,6 +10,7 @@ function solution = SaveMemory( solution, input, timestep )
 
         for k = 1:numel(subinput.interactions)
             % get the interactions
+            interaction_type = GetFromInput(subinput.interactions{k}, 'interactionType', 'unitary');
             Ak = subinput.interactions{k}.A; 
             Bk = subinput.interactions{k}.B;
             
@@ -22,10 +23,25 @@ function solution = SaveMemory( solution, input, timestep )
             dBk = Bk.Operator - trace(Bk.Operator * rhoB) * speye(size(Bk.Operator));
 
             % save the memory functions from this time step
-            solution.hist{partitionIndex}{timestep}.c{k} = dAk * rhoA;
-            solution.hist{partitionIndex}{timestep}.dkern{k} = dBk * rhoB;
-            solution.hist{partitionIndex}{timestep}.r{k} = rhoA * dAk;
-            solution.hist{partitionIndex}{timestep}.skern{k} = rhoB * dBk;
+            switch (interaction_type)
+                case 'unitary'
+                    solution.hist{partitionIndex}{timestep}.c{k} = dAk * rhoA;
+                    solution.hist{partitionIndex}{timestep}.dkern{k} = dBk * rhoB;
+                    solution.hist{partitionIndex}{timestep}.r{k} = rhoA * dAk;
+                    solution.hist{partitionIndex}{timestep}.skern{k} = rhoB * dBk;
+                case 'dissipative_ARB'
+                    solution.hist{partitionIndex}{timestep}.c{k} = (Ak * rhoA - rhoA * Ak);
+                    solution.hist{partitionIndex}{timestep}.dkern{k} = rhoB * dBk';
+                    solution.hist{partitionIndex}{timestep}.r{k} = dAk * rhoA;
+                    solution.hist{partitionIndex}{timestep}.skern{k} = (Bk' * rhoB - rhoB * Bk');
+                case 'dissipative_BRA'
+                    solution.hist{partitionIndex}{timestep}.c{k} = rhoA * dAk';
+                    solution.hist{partitionIndex}{timestep}.dkern{k} = (Bk * rhoB - rhoB * Bk);
+                    solution.hist{partitionIndex}{timestep}.r{k} = (Ak' * rhoA - rhoA * Ak');
+                    solution.hist{partitionIndex}{timestep}.skern{k} = dBk * rhoB;
+                otherwise
+                    throw exception
+            end                
         end
     end
     
