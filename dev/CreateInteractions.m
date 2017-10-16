@@ -33,9 +33,9 @@ function interactions = CreateInteractions( input, interaction_map )
         
         % get the interaction type if it exists
         if isKey(interaction_map{i}, 'interactionType')
-            interactions{i}.interaction_type = interaction_map{i}('interactionType');
+            interactions{i}.interactionType = interaction_map{i}('interactionType');
         else % default is unitary
-            interactions{i}.interaction_type = 'unitary';
+            interactions{i}.interactionType = 'unitary';
         end
         
         % get the coordination number if it exists

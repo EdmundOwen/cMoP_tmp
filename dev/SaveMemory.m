@@ -30,14 +30,14 @@ function solution = SaveMemory( solution, input, timestep )
                     solution.hist{partitionIndex}{timestep}.r{k} = rhoA * dAk;
                     solution.hist{partitionIndex}{timestep}.skern{k} = rhoB * dBk;
                 case 'dissipative_ARB'
-                    solution.hist{partitionIndex}{timestep}.c{k} = (Ak * rhoA - rhoA * Ak);
+                    solution.hist{partitionIndex}{timestep}.c{k} = (Ak.Operator * rhoA - rhoA * Ak.Operator);
                     solution.hist{partitionIndex}{timestep}.dkern{k} = rhoB * dBk';
                     solution.hist{partitionIndex}{timestep}.r{k} = dAk * rhoA;
-                    solution.hist{partitionIndex}{timestep}.skern{k} = (Bk' * rhoB - rhoB * Bk');
+                    solution.hist{partitionIndex}{timestep}.skern{k} = (Bk.Operator' * rhoB - rhoB * Bk.Operator');
                 case 'dissipative_BRA'
                     solution.hist{partitionIndex}{timestep}.c{k} = rhoA * dAk';
-                    solution.hist{partitionIndex}{timestep}.dkern{k} = (Bk * rhoB - rhoB * Bk);
-                    solution.hist{partitionIndex}{timestep}.r{k} = (Ak' * rhoA - rhoA * Ak');
+                    solution.hist{partitionIndex}{timestep}.dkern{k} = (Bk.Operator * rhoB - rhoB * Bk.Operator);
+                    solution.hist{partitionIndex}{timestep}.r{k} = (Ak.Operator' * rhoA - rhoA * Ak.Operator');
                     solution.hist{partitionIndex}{timestep}.skern{k} = dBk * rhoB;
                 otherwise
                     throw exception

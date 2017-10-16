@@ -21,7 +21,7 @@ function result = LMF( input, mat, solution )
         interaction_strength = SE_interactions{i}.interactionStrength;
         A = SE_interactions{i}.A;
         B = SE_interactions{i}.B;
-        interaction_type = GetFromInput(SE_interactions, 'interactionType', 'unitary');
+        interaction_type = GetFromInput(SE_interactions{i}, 'interactionType', 'unitary');
         coordination = SE_interactions{i}.coordination;
     
         %% calculate the mean field term for this interaction
@@ -29,9 +29,13 @@ function result = LMF( input, mat, solution )
             case 'unitary'
                 result = result + -1.0i * interaction_strength * coordination * comm(B, A, mat, solution.rho);
             case 'dissipative_ARB'
-                result = result + 0.5 * interaction_strength * coordination * comm(B', A, mat, solution.rho);
+                Btmp = B;
+                Btmp.Operator = Btmp.Operator';
+                result = result + 0.5 * interaction_strength * coordination * comm(Btmp, A, mat, solution.rho);
             case 'dissipative_BRA'
-                result = result - 0.5 * interaction_strength * coordination * (comm(B, A', mat, solution.rho))';
+                Atmp = A;
+                Atmp.Operator = Atmp.Operator';
+                result = result - 0.5 * interaction_strength * coordination * comm(B, Atmp, mat, solution.rho);
             otherwise
                 throw exception
         end                

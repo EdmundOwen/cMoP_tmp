@@ -33,10 +33,11 @@ function result = LBT( input, mat, solution )
             int_type_l = GetFromInput(interactions{l}, 'interactionType', 'unitary');
             if strcmp(int_type_k, 'unitary') && strcmp(int_type_l, 'unitary')
                 ;
-            elseif (strcmp(int_type_k, 'dissipative') && strcmp(int_type_l, 'unitary')) ...
-                        || (strcmp(int_type_k, 'unitary') && strcmp(int_type_l, 'dissipative'))
+            elseif (strncmpi(int_type_k, 'dissipative', length('dissipative')) && strcmp(int_type_l, 'unitary')) ...
+                        || (strcmp(int_type_k, 'unitary') && strncmpi(int_type_l, 'dissipative', length('dissipative')))
                 J2 = -1i * J2;
-            elseif strcmp(int_type_k, 'dissipative') && strcmp(int_type_l, 'dissipative')
+            elseif strncmpi(int_type_k, 'dissipative', length('dissipative')) ...
+                        && strncmpi(int_type_l, 'dissipative', length('dissipative'))
                 J2 = -J2;
             else
                 throw exception
