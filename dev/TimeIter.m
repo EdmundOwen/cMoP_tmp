@@ -20,6 +20,7 @@ function result = TimeIter(input, rho)
     %% perform density matrix iteration
     for i = 1:input.Nt
         
+        result.time = i * dt;
         result.rho = new_rho;
         if mod(i, input.NTest) == 0
             for j = 1:numel(input.probelist)
