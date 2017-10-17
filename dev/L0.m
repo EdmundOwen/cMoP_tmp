@@ -15,12 +15,12 @@ function result = L0( input, mat, solution )
     A_Lindblad = input.A_Lindblad;
 
     %% add unitary part of evolution to the superoperator
-    if isa(full(H0), 'double')
-        result = -1.0i * (H0 * mat - mat * H0);
-    elseif isa(H0, 'function_handle')
+    if isa(H0, 'function_handle')
         % assume that H0 is a time dependent function
         t = solution.time;
         result = -1.0i * (H0(t) * mat - mat * H0(t));
+    elseif isa(full(H0), 'double')
+        result = -1.0i * (H0 * mat - mat * H0);
     else
         throw exception;
     end
