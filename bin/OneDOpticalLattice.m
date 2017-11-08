@@ -108,6 +108,30 @@ for Deltacount = 1:nDelta
     %% create interactions
     int_type = {};
     keySet = {'interactionStrength', 'A', 'B', 'correlations', 'coordination', 'interactionType'};
+    % create correlation matrix
+    count = 1;
+    correlation_matrix = zeros(clustersize * (2 * interaction_range + 1));
+	for i = 1:clustersize
+        for j = -interaction_range:interaction_range
+            if i + j < 1 || i + j > clustersize
+                include_vector(count) = i * (2 * interaction_range + 1) + j - interaction_range;
+                count = count + 1;
+            end
+            for k = 1:clustersize
+                for l = -interaction_range:interaction_range
+                    if floor(i + j) == floor(k + l)
+                        correlation_matrix(i * (2 * interaction_range + 1) + j - interaction_range, ...
+                                                k * (2 * interaction_range + 1) + l - interaction_range) = 1;
+                    end
+                end
+            end
+        end
+    end
+    correlation_matrix = correlation_matrix(include_vector, :);
+    correlation_matrix = correlation_matrix(:, include_vector);
+    % kronecker delta this with a 4x4 matrix of ones as there are 4 types
+    % of interactions
+    correlation_matrix = kron(correlation_matrix, ones(4));
     % create interaction dictionary
     for i = 1:clustersize
         for j = -interaction_range:interaction_range
@@ -126,19 +150,19 @@ for Deltacount = 1:nDelta
             int_type{end+1} = containers.Map(keySet, {Gamma_0 * (sphericalbesselj(0, k0_r) - 0.5 * sphericalbesselj(2, k0_r)), ...
                                                 struct('Index', 1, 'SiteOperator', a, 'SiteLabel', i), ...
                                                 struct('Index', 1, 'SiteOperator', a, 'SiteLabel', B_SiteLabel), ...
-                                                correlations, 1, 'dissipative_ARB'});
+                                                correlation_matrix(numel(int_type) + 1, :), 1, 'dissipative_ARB'});
             int_type{end+1} = containers.Map(keySet, {Gamma_0 * (sphericalbesselj(0, k0_r) - 0.5 * sphericalbesselj(2, k0_r)), ...
                                                 struct('Index', 1, 'SiteOperator', a, 'SiteLabel', i), ...
                                                 struct('Index', 1, 'SiteOperator', a, 'SiteLabel', B_SiteLabel), ...
-                                                correlations, 1, 'dissipative_BRA'});
+                                                correlation_matrix(numel(int_type) + 1, :), 1, 'dissipative_BRA'});
             int_type{end+1} = containers.Map(keySet, {0.5 * Gamma_0 * (sphericalbessely(0, k0_r) - 0.5 * sphericalbessely(2, k0_r)), ...
                                                 struct('Index', 1, 'SiteOperator', a, 'SiteLabel', i), ...
                                                 struct('Index', 1, 'SiteOperator', a', 'SiteLabel', B_SiteLabel), ...
-                                                correlations, 1, 'unitary'});
+                                                correlation_matrix(numel(int_type) + 1, :), 1, 'unitary'});
             int_type{end+1} = containers.Map(keySet, {0.5 * Gamma_0 * (sphericalbessely(0, k0_r) - 0.5 * sphericalbessely(2, k0_r)), ...
                                                 struct('Index', 1, 'SiteOperator', a', 'SiteLabel', i), ...
                                                 struct('Index', 1, 'SiteOperator', a, 'SiteLabel', B_SiteLabel), ...
-                                                correlations, 1, 'unitary'});
+                                                correlation_matrix(numel(int_type) + 1, :), 1, 'unitary'});
         end
     end
     input.subinput{1}.interactions = CreateInteractions(input, int_type);
