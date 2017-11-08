@@ -169,7 +169,12 @@ for Deltacount = 1:nDelta
     result = TimeIter(input, rho);
 
     %% calculate cross-section
-    sigma(Deltacount) = imag(E * d_eg * result.hist{1}{end}.rho(2,1));
+    sigma_tot = 0.0;
+    for i = 1:clustersize
+        sigma_tot = sigma_tot + imag(Evec(i) * d_eg ...
+                            * trace(result.hist{1}{end}.rho * InsertOperator(a, i, onsitedim, clustersize)));
+    end
+    sigma(Deltacount) = sigma_tot / clustersize;   
 end
 
 %% fit the cross-section to a Lorentzian to get half-decay rates and lineshifts for each set of lattice spacing
