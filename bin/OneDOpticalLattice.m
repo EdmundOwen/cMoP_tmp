@@ -66,7 +66,7 @@ for Deltacount = 1:nDelta
             if i ~= j
                 k0_r = k0 * abs(i - j) * dr;
                 H0_mat = H0_mat + Gamma_0 * (sphericalbessely(0, k0_r) - 0.5 * sphericalbessely(2, k0_r)) ...
-                                     * InsertOperator(i, a', onsitedim, clustersize) * InsertOperator(j, a, onsitedim, clustersize);
+                                     * InsertOperator(a', i, onsitedim, clustersize) * InsertOperator(a, j, onsitedim, clustersize);
             end
         end
     end
@@ -110,6 +110,7 @@ for Deltacount = 1:nDelta
     keySet = {'interactionStrength', 'A', 'B', 'correlations', 'coordination', 'interactionType'};
     % create correlation matrix
     count = 1;
+    include_vector = [];
     correlation_matrix = zeros(clustersize * (2 * interaction_range + 1));
 	for i = 1:clustersize
         for j = -interaction_range:interaction_range
@@ -141,9 +142,6 @@ for Deltacount = 1:nDelta
             if (i + j) > 0 && (i + j) < clustersize + 1
                 continue
             end
-            
-            % create correlation vectors
-            correlations = [];
             
             % create individual interactions
             B_SiteLabel = mod(i + j - 1, clustersize) + 1;
