@@ -108,59 +108,53 @@ for Deltacount = 1:nDelta
     %% create interactions
     int_type = {};
     keySet = {'interactionStrength', 'A', 'B', 'correlations', 'coordination', 'interactionType'};
-    % create correlation matrix
-    count = 1;
-    include_vector = [];
-    correlation_matrix = zeros(clustersize * (2 * interaction_range + 1));
-	for i = 1:clustersize
-        for j = -interaction_range:interaction_range
-            if i + j < 1 || i + j > clustersize
-                include_vector(count) = i * (2 * interaction_range + 1) + j - interaction_range;
-                count = count + 1;
-            end
-            for k = 1:clustersize
-                for l = -interaction_range:interaction_range
-                    if floor(i + j) == floor(k + l)
-                        correlation_matrix(i * (2 * interaction_range + 1) + j - interaction_range, ...
-                                                k * (2 * interaction_range + 1) + l - interaction_range) = 1;
-                    end
-                end
-            end
-        end
-    end
-    correlation_matrix = correlation_matrix(include_vector, :);
-    correlation_matrix = correlation_matrix(:, include_vector);
-    % kronecker delta this with a 4x4 matrix of ones as there are 4 types
-    % of interactions
-    correlation_matrix = kron(correlation_matrix, ones(4));
-    % create interaction dictionary
     for i = 1:clustersize
-        for j = -interaction_range:interaction_range
-            k0_r = k0 * abs(j) * dr;
+        for j = 1:clustersize
+            interaction_prefactor_unitary = 0.0;
+            interaction_prefactor_dissipative = 0.0;
             
-            % continue if interaction is already modelled within the cluster
-            if (i + j) > 0 && (i + j) < clustersize + 1
-                continue
+            % cycle through the interaction range checking whether this A/B
+            % site pair is correct and adding to the interaction strength
+            % to the associated prefactor
+            for n = -interaction_range:interaction_range
+                k0_r = k0 * abs(n) * dr;
+            
+                % continue if interaction is already modelled within the cluster
+                if (i + n) > 0 && (i + n) < clustersize + 1
+                    continue
+                end
+                % also continue if this isn't the interaction site we're
+                % trying to find
+                if j ~= mod(i + n, clustersize) + 1
+                    continue
+                end
+            
+                % add this interaction to the interaction prefactor
+                interaction_prefactor_unitary = interaction_prefactor_unitary ...
+                                                + 0.5 * Gamma_0 * (sphericalbessely(0, k0_r) - 0.5 * sphericalbessely(2, k0_r));
+                interaction_prefactor_dissipative = interaction_prefactor_dissipative ...
+                                                + Gamma_0 * (sphericalbesselj(0, k0_r) - 0.5 * sphericalbesselj(2, k0_r));
             end
             
-            % create individual interactions
+            % create this interaction between A and B sites for all clusters
             B_SiteLabel = mod(i + j - 1, clustersize) + 1;
-            int_type{end+1} = containers.Map(keySet, {Gamma_0 * (sphericalbesselj(0, k0_r) - 0.5 * sphericalbesselj(2, k0_r)), ...
+            correlations = ones(4*clustersize^2, 1);
+            int_type{end+1} = containers.Map(keySet, {interaction_prefactor_dissipative, ...
                                                 struct('Index', 1, 'SiteOperator', a, 'SiteLabel', i), ...
                                                 struct('Index', 1, 'SiteOperator', a, 'SiteLabel', B_SiteLabel), ...
-                                                correlation_matrix(numel(int_type) + 1, :), 1, 'dissipative_ARB'});
-            int_type{end+1} = containers.Map(keySet, {Gamma_0 * (sphericalbesselj(0, k0_r) - 0.5 * sphericalbesselj(2, k0_r)), ...
+                                                correlations, 1, 'dissipative_ARB'});
+            int_type{end+1} = containers.Map(keySet, {interaction_prefactor_dissipative, ...
                                                 struct('Index', 1, 'SiteOperator', a, 'SiteLabel', i), ...
                                                 struct('Index', 1, 'SiteOperator', a, 'SiteLabel', B_SiteLabel), ...
-                                                correlation_matrix(numel(int_type) + 1, :), 1, 'dissipative_BRA'});
-            int_type{end+1} = containers.Map(keySet, {0.5 * Gamma_0 * (sphericalbessely(0, k0_r) - 0.5 * sphericalbessely(2, k0_r)), ...
+                                                correlations, 1, 'dissipative_BRA'});
+            int_type{end+1} = containers.Map(keySet, {interaction_prefactor_unitary, ...
                                                 struct('Index', 1, 'SiteOperator', a, 'SiteLabel', i), ...
                                                 struct('Index', 1, 'SiteOperator', a', 'SiteLabel', B_SiteLabel), ...
-                                                correlation_matrix(numel(int_type) + 1, :), 1, 'unitary'});
-            int_type{end+1} = containers.Map(keySet, {0.5 * Gamma_0 * (sphericalbessely(0, k0_r) - 0.5 * sphericalbessely(2, k0_r)), ...
+                                                correlations, 1, 'unitary'});
+            int_type{end+1} = containers.Map(keySet, {interaction_prefactor_unitary, ...
                                                 struct('Index', 1, 'SiteOperator', a', 'SiteLabel', i), ...
                                                 struct('Index', 1, 'SiteOperator', a, 'SiteLabel', B_SiteLabel), ...
-                                                correlation_matrix(numel(int_type) + 1, :), 1, 'unitary'});
+                                                correlations, 1, 'unitary'});
         end
     end
     input.subinput{1}.interactions = CreateInteractions(input, int_type);
