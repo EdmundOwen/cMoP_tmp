@@ -8,6 +8,11 @@ function result = L0_Smat( input, solution )
     H0 = input.H0;
     Lindblad_weights = input.Lindblad_weights;
     A_Lindblad = input.A_Lindblad;
+    
+    %% check that H0 is time-independent
+    if ~isa(full(H0), 'double')
+        throw exception;
+    end
 
     %% create prototypes for the superoperator matrix product functions
     % matprodleft and matprodright
