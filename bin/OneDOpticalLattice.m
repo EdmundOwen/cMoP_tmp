@@ -28,14 +28,14 @@ sphericalbessely = @(nu, x) sqrt(pi ./ (2 .* x)) * bessely(nu + 0.5, x);
 clustersize = 1;
 onsitedim = 2;
 L = { @L0, @LMF };
-interaction_range = 10;
+interaction_range = 1000;
 
 % simulation
 method = 'heun';
 Nt = 3000;
 dt = 0.02;
 probelist = { @SaveDensity, @SaveMagnetisation, @SaveRho };
-filebase = 'OpticalLattice_r%03.1g_E%03.1g.mat';
+filebase = 'OpticalLattice_r%04.2f_E%03.1f.mat';
 
 for Deltacount = 1:nDelta
     clear result
@@ -65,7 +65,7 @@ for Deltacount = 1:nDelta
         for j = 1:clustersize
             if i ~= j
                 k0_r = k0 * abs(i - j) * dr;
-                H0_mat = H0_mat + Gamma_0 * (sphericalbessely(0, k0_r) - 0.5 * sphericalbessely(2, k0_r)) ...
+                H0_mat = H0_mat + 0.5 * Gamma_0 * (sphericalbessely(0, k0_r) - 0.5 * sphericalbessely(2, k0_r)) ...
                                      * InsertOperator(a', i, onsitedim, clustersize) * InsertOperator(a, j, onsitedim, clustersize);
             end
         end
@@ -160,13 +160,27 @@ for Deltacount = 1:nDelta
     input.subinput{1}.interactions = CreateInteractions(input, int_type);
 
     %% run simulation
-    result = TimeIter(input, rho);
+    % using steady state calculation
+    solution = {};
+    solution.rho = rho;
+    input.H0 = input.H0(0);
+    input.subinput{1}.H0 = input.subinput{1}.H0(0);
+    input = SetupSteadyState(input, {});
+    result = CalculateSteadyState(input, rho, solution);
 
     %% calculate cross-section
     sigma_tot = 0.0;
+    % check that the iterator has converged, if not, set sigma to -2
+    if ~isa(result, 'cell')
+        if result == -1
+            sigma_tot = -2.0 * clustersize;
+        else
+            throw exception
+        end
+    end
     for i = 1:clustersize
         sigma_tot = sigma_tot + imag(Evec(i) * d_eg ...
-                            * trace(result.hist{1}{end}.rho * InsertOperator(a, i, onsitedim, clustersize)));
+                            * trace(result{1} * InsertOperator(a, i, onsitedim, clustersize)));
     end
     sigma(Deltacount) = sigma_tot / clustersize;   
 end
