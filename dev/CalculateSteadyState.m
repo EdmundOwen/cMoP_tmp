@@ -6,6 +6,7 @@ function rho_ss = CalculateSteadyState( input, init_rho, solution )
     %% machine tolerance error for calculating the zeros of the svd 
     % decomposition
     machine_tol = 1e-10;
+    alpha = 0.1;
     converged = zeros(1, input.noPartitions);
 
     %% get useful input values
@@ -78,7 +79,7 @@ function rho_ss = CalculateSteadyState( input, init_rho, solution )
             end
         
             %% set the solution density matrix to be this new one
-            solution.rho{k} = new_rho;
+            solution.rho{k} = (1.0 - alpha) * solution.rho{k} + alpha * new_rho;
         end
         
         %% check that all the partitions have converged
