@@ -6,7 +6,7 @@ function rho_ss = CalculateSteadyState( input, init_rho, solution )
     %% machine tolerance error for calculating the zeros of the svd 
     % decomposition
     machine_tol = 1e-10;
-    alpha = 0.1;
+    alpha = input.steadyStateMixingRatio;
     converged = zeros(1, input.noPartitions);
 
     %% get useful input values

@@ -11,6 +11,7 @@ function input = SetupSteadyState(input, varargin)
     p = AddParserOption(p, input, 'searchCount', 5, @isnumeric);
     p = AddParserOption(p, input, 'searchInterval', [0.0 1.0], true);
     p = AddParserOption(p, input, 'optimalIncrementSearchMethod', 'binarychopExact', true);
+    p = AddParserOption(p, input, 'steadyStateMixingRatio', 1.0, @isnumeric);
     
     %% parse the inputs
     tmp = varargin{:};
@@ -22,5 +23,6 @@ function input = SetupSteadyState(input, varargin)
     input.searchCount = round(p.Results.searchCount);
     input.searchInterval = p.Results.searchInterval;
     input.optimalIncrementSearchMethod = p.Results.optimalIncrementSearchMethod;
+    input.steadyStateMixingRatio = p.Results.steadyStateMixingRatio;
     
 end
