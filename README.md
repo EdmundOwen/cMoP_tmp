@@ -9,6 +9,12 @@ Self-Consistent Mori Projector Solver
    2. Simplifications
 3. Code Layout
    1. dev
+      1. The ``rho`` cell array
+      2. The ``input`` struct
+      3. Setup functions
+      4. ``CreateInteractions``
+      5. ``TimeIter``
+      6. ``CalculateSteadyState``
    2. bin
    3. test
    4. utils
@@ -100,11 +106,74 @@ general explanations of what the various functions do.
 
 ### 3.i dev
 
+This folder contains all of the functions which the cMoP code needs in order to run.
+
+For a first-time user; the most important functions are the ``Setup``*name*, ``CreateInteractions``, 
+``TimeIter`` and ``CalculateSteadyState`` functions.  In addition, the code uses a struct which is 
+labelled ``input`` in the examples which contains the input parameters of the problem, and a struct
+called ``solution`` which is an auxilliary struct used to contain temporary copies of the density matrix.
+
+#### 3.i.a The ``rho`` cell array
+
+The density matrix is stored as a cell array.  This allows multiple density matrices to be stored
+in the same variable when the system is partitioned into two or more different regions.  Note
+that ``rho`` must still be a (1x1) cell array even when there is only one partition
+
+#### 3.i.b The ``input`` struct
+
+As the inputs may be applied to different partitions differently, ``input`` is actually an array
+containing a ``subinput`` field which is a cell array of ``input`` structs.  This is a bit of a
+mess right now as ``input`` does contain other fields even though it probably shouldn't.  *Be
+careful to make sure that interactions are system parameters are in the ``subinput`` field!*
+
+#### 3.i.c Setup functions
+
+The ``Setup``*name* functions (e.g. ``SetupSystem``) take the ``input`` struct and a cell array
+of string-value pairs and initialise the system, returning the new version of ``input``.  These
+functions will set defaults.  Available input parameters are not documented but should be relatively
+clear from context and the parameter parser contained within the functions.
+
+#### 3.i.d ``CreateInteractions``
+
+This function creates interactions between partitions and between copies of the density matrix and
+itself (in the case of translationally invariant systems).  The inputs for this funciton are the
+``input`` struct and a ``Map`` containing key-value pairs.  The necessary key set is
+
+``keySet = {'interactionStrength', 'A', 'B', 'correlations'}``
+
+although there are additional options.  ``interactionStrength`` is the strength of the interaction,
+``A`` and ``B`` are the two parts of the bilinear interaction and ``correlations`` is a correlation
+matrix which determines which pairs of interactions are summed over in the Born term.  The bilinear
+operators are structs with the fields ``Index``, which is the partition index which the operator
+acts on, ``SiteOperator`` which contains the operator for a given site and ``SiteLabel`` which is
+the site in the given partition that the operator acts on.
+
+NOTE: *the interactions should be put in the subinput and not in input*! (see bin/AnisotropicPartition.m)
+
+#### 3.i.e ``TimeIter``
+
+Time-integrates the cMoP equations of motion based on the parameters defined within the ``input`` 
+struct for the starting density matrix ``rho``.  The outputs are defined by the variable ``probelist``
+which is set using the ``SetupTimeIter`` function.
+
+#### 3.i.f ``CalculateSteadyState``
+
+Calculates steady state solutions for the cMoP equations by finding the zero of the non-linear
+equation:
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=\sum_i&space;\mathcal{L}_i&space;\,&space;\rho_0&space;=&space;0" target="_blank">
+<img src="https://latex.codecogs.com/gif.latex?\sum_i&space;\mathcal{L}_i&space;\,&space;\rho_0&space;=&space;0" title="\sum_i \mathcal{L}_i \, \rho_0 = 0" /></a>
+<br />
+
+see Ref. [[1]](https://journals.aps.org/prb/abstract/10.1103/PhysRevB.89.245108) for details.
+Note that this function needs the auxilliary struct ``solution`` which is changed within
+``solution`` but will not be changed after ``CalculateSteadyState`` has run.
+
 ### 3.ii bin
 
 This folder contains complete solutions for some example problems:
 
-Anisotropic_Partition: This file reproduces the results of Ref. [[2]](http://iopscience.iop.org/article/10.1088/1367-2630/aab7d3/meta)) 
+Anisotropic_Partition: This file reproduces the results of Ref. [[2]](http://iopscience.iop.org/article/10.1088/1367-2630/aab7d3/meta) 
 by calculating cMoP results for the anisotropic Heisenberg lattice for lattices with any number of
 dimensions.  This problem demonstrates the cMoP method and includes partitioning onto multiple different
 lattices with different reduced density matrices.
@@ -124,5 +193,6 @@ Some utility functions written by other parties.  Non-essential.
 
 ## 4. References
 
-[1](https://journals.aps.org/prb/abstract/10.1103/PhysRevB.89.245108) Original paper detailing the cMoP method
-[2](http://iopscience.iop.org/article/10.1088/1367-2630/aab7d3/meta) Limit cycles and cMoP calculations for a partitioned lattice
+[[1]](https://journals.aps.org/prb/abstract/10.1103/PhysRevB.89.245108) Original paper detailing the cMoP method
+
+[[2]](http://iopscience.iop.org/article/10.1088/1367-2630/aab7d3/meta) Limit cycles and cMoP calculations for a partitioned lattice
