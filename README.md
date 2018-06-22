@@ -102,7 +102,16 @@ general explanations of what the various functions do.
 
 ### 3.ii bin
 
+This folder contains complete solutions for some example problems:
 
+Anisotropic_Partition: This file reproduces the results of Ref. [[2]](http://iopscience.iop.org/article/10.1088/1367-2630/aab7d3/meta)) 
+by calculating cMoP results for the anisotropic Heisenberg lattice for lattices with any number of
+dimensions.  This problem demonstrates the cMoP method and includes partitioning onto multiple different
+lattices with different reduced density matrices.
+
+OneDOpticalLattice: This file produces mean-field results for a one-dimensional optical lattice.
+This problem demonstrates a system which contains both unitary and dissipative interactions for
+a mean-field interaction Liouvillian.
 
 ### 3.iii test
 
